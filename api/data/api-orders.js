@@ -77,6 +77,7 @@ router.get('/pluscart/:id', function (req, res) {
     })
 });
 
+
 router.get('/delcart/:id', function (req, res) {
     const cart_id = req.params.id;
     const condition = `cart_id='${cart_id}'`;
@@ -168,7 +169,6 @@ router.post("/payment", function (req, res) {
                             if (err) {
                                 return res.status(500).json({ message: 'ການດຳເນີນງານລົມເຫ້ລວ' });
                             }
-
                             const condition = `cart_id='${item.cart_id}'`;
                             db.deleteData('tbl_cart_order', condition, (err, results) => {
                                 if (err) {
@@ -179,15 +179,16 @@ router.post("/payment", function (req, res) {
                         });
                     });
                 });
-            res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', id:sale_uuid });
+            res.status(200).json({message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', id:sale_uuid });
 
         });
-        
+
 
     });
 
-  
+
 });
+
 
 router.post("/bill", function (req, res) {
     const { billNo_number } = req.body;

@@ -294,7 +294,7 @@ router.post('/itemsale', function (req, res) {
     const fields = `product_uuid,option_id_fk,tiles_id_fk,file_image,qty_baht,tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
-    option_name,tile_name, code_id,quantity,zone_name,zone_id_fk`;
+    option_name,tile_name, code_id,quantity,zone_name,bg_color,zone_id_fk`;
     const where = `zone_status='1' ${tile_name} ${zone_id_fk}`;
     db.selectWhere(tables, fields, where, (err, results) => {
         if (err) {

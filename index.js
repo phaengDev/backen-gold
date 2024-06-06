@@ -26,7 +26,9 @@ const useReportSale=require('./api/reports/report-sale-daily');
 const useCustomer=require('./api/data/api-customer');
 const useStock=require('./api/reports/report-stock')
 const useHome=require('./api/reports/fetch-data-home');
-const useSystem=require('./api/setting/api-system-shop')
+const useSystem=require('./api/setting/api-system-shop');
+const useSearch=require('./api/data/search-data');
+
 const useLogin=require('./api/checklogin');
 
 //===================== use router
@@ -50,6 +52,7 @@ app.use('/stock',useStock);
 app.use('/home',useHome);
 app.use('/system',useSystem);
 app.use('/login',useLogin);
+app.use('/search',useSearch);
 
 const PORT = process.env.PORT || 3061;
 app.listen(PORT, () => {

@@ -142,8 +142,8 @@ router.post("/payment", function (req, res) {
         db.insertData(tableCut, fieldCus, dataCus, (err, resct) => { resct })
     }
     const billNo = `CASE 
-    WHEN MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) IS NULL THEN 'B-0001'
-    ELSE CONCAT('B-', LPAD(MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) + 1, 4, '0')) END AS sale_billNo`;
+    WHEN MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) IS NULL THEN 'VK-0001'
+    ELSE CONCAT('VK-', LPAD(MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) + 1, 4, '0')) END AS sale_billNo`;
     db.selectData(tableSale, billNo, (req, ress) => {
         const sale_billNo = ress[0].sale_billNo;
         const fieldSale = 'sale_uuid,sale_billNo,bill_shop,total_grams,balance_vat,balance_total,status_payment,balance_cash,balance_transfer,balance_payment,balance_return,branch_id_fk,user_id_fk,staff_id_fk,customer_id_fk,sale_remark,sale_date,sale_status,status_off_sale';
@@ -182,11 +182,7 @@ router.post("/payment", function (req, res) {
             res.status(200).json({message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', id:sale_uuid });
 
         });
-
-
     });
-
-
 });
 
 
@@ -198,6 +194,7 @@ router.post("/bill", function (req, res) {
 	LEFT JOIN tbl_user_acount ON  tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid`;
     const field = `tbl_sale_gold.sale_uuid, 
 	tbl_sale_gold.sale_billNo, 
+    tbl_sale_gold.bill_shop,
 	tbl_sale_gold.balance_total, 
 	tbl_sale_gold.status_payment, 
 	tbl_sale_gold.balance_cash, 
@@ -213,7 +210,7 @@ router.post("/bill", function (req, res) {
     concat(cus_fname,' ',cus_lname) as customeName,
 	tbl_customer.cus_tel, 
 	tbl_user_acount.userName,status_off_sale,date_off_sale`;
-    const condition = `sale_billNo='${billNo_number}'`;
+    const condition =`sale_billNo='${billNo_number}' OR bill_shop='${billNo_number}'`;
     //=================
     const fieldList = `
    tbl_sale_detail.price_sale, 

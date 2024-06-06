@@ -284,21 +284,21 @@ router.get("/saledays/:id", function (req, res) {
 			console.error('Error fetching sales data:', err);
 			return res.status(500).json({ message: 'An error occurred while fetching sales data.' });
 		}
-
-		
 		res.status(200).json(saleResults);
 	});
 });
 
 router.get('/reques/:id', async (req, res) => {
-	try {
+	// try {
 	  const sale_uuid = req.params.id;
 	  const wheres = `sale_uuid='${sale_uuid}'`;
 	  const tables = `tbl_sale_gold
 		LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 		LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
 		LEFT JOIN tbl_user_acount ON tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid
-		LEFT JOIN tbl_branch ON tbl_sale_gold.branch_id_fk = tbl_branch.branch_uuid`;
+		LEFT JOIN tbl_branch ON tbl_sale_gold.branch_id_fk = tbl_branch.branch_uuid
+		LEFT JOIN tbl_province ON tbl_branch.province_id_fk = tbl_province.province_id
+		LEFT JOIN tbl_district ON tbl_branch.district_id_fk = tbl_district.district_id`;
 	  const fields = `tbl_sale_gold.sale_uuid, 
 		tbl_sale_gold.sale_billNo, 
 		tbl_sale_gold.bill_shop,
@@ -319,7 +319,10 @@ router.get('/reques/:id', async (req, res) => {
 		tbl_user_acount.userName,
 		tbl_branch.branch_name,
 		tbl_branch.branch_tel,
-		tbl_branch.branch_email`;
+		tbl_branch.branch_email,
+		tbl_branch.village_name,
+		district_name,
+		province_name`;
 	  const results = await new Promise((resolve, reject) => {
 		db.fetchSingle(tables, fields, wheres, (err, results) => {
 		  if (err) {
@@ -365,10 +368,7 @@ router.get('/reques/:id', async (req, res) => {
 	  results.dataList=saleList;
 
 	  res.status(200).json(results);
-	} catch (error) {
-	  console.error('Error fetching sales data:', error);
-	  res.status(500).json({ message: 'Internal server error' });
-	}
+	
   });
 
 module.exports = router;

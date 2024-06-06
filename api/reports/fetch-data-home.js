@@ -133,7 +133,7 @@ router.get("/price/:id", async function (req, res) {
 // }
 
 const fields = `price_sale_new, price_buy_new,(SELECT grams FROM tbl_options WHERE option_id='1') as grams,DATE_FORMAT(update_date, '%d/%m') AS update_date`;
-const wheres = `MONTH(update_date)='${month}' AND type_id_fk='${type}' GROUP BY update_date ORDER BY update_date ASC`;
+const wheres = `type_id_fk='${type}' GROUP BY update_date ORDER BY update_date ASC LIMIT 30`;
         try {
             const results = await new Promise((resolve, reject) => {
               db.selectWhere('tbl_update_price', fields, wheres, (err, results) => {

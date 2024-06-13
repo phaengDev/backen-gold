@@ -13,7 +13,7 @@ router.get("/total", async function (req, res) {
     const tables = `tbl_sale_detail
     LEFT JOIN tbl_product ON tbl_sale_detail.product_id_fk =tbl_product.product_uuid
     LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid`;
-    const fields = `COALESCE(SUM(tatal_balance),0) as tatal_balance`;
+    const fields = `COALESCE(SUM(total_balance),0) as total_balance`;
 
     const tabeList = `tbl_sale_detail
    LEFT JOIN tbl_product ON tbl_sale_detail.product_id_fk =tbl_product.product_uuid
@@ -39,9 +39,9 @@ router.get("/total", async function (req, res) {
                 resolve(restotal[0]);
             });
         });
-        results[i].totalSale = reSale.tatal_balance;
+        results[i].totalSale = reSale.total_balance;
         // =================== sum option 
-        const fieldList = 'COALESCE(SUM(tatal_balance), 0) AS balance_pt,option_name';
+        const fieldList = 'COALESCE(SUM(total_balance), 0) AS balance_pt,option_name';
         const whereList = `status_cancle='1' AND DATE(tbl_sale_detail.create_date)='${dateNow}' AND type_id_fk='${results[i].type_Id}' GROUP BY option_id_fk`;
         const resList = await new Promise((resolve, reject) => {
             db.selectWhere(tabeList, fieldList, whereList, (err, resList) => {
@@ -133,7 +133,7 @@ router.get("/price/:id", async function (req, res) {
 // }
 
 const fields = `price_sale_new, price_buy_new,(SELECT grams FROM tbl_options WHERE option_id='1') as grams,DATE_FORMAT(update_date, '%d/%m') AS update_date`;
-const wheres = `type_id_fk='${type}' GROUP BY update_date ORDER BY update_date ASC LIMIT 30`;
+const wheres = `type_id_fk='${type}' GROUP BY update_date ORDER BY _id ASC LIMIT 30`;
         try {
             const results = await new Promise((resolve, reject) => {
               db.selectWhere('tbl_update_price', fields, wheres, (err, results) => {

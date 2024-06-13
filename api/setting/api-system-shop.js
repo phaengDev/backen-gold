@@ -42,6 +42,17 @@ const {branch_uuid,branch_name,branch_tel,branch_email,province_id_fk,district_i
 });
 });
 
+
+router.get("/", function (req, res) {
+    const tables=`tbl_branch`;
+    db.selectAll(tables,(err,results)=>{
+        if (err) {
+            return res.status(400).send(err);
+        }
+        res.status(200).json(results);
+    })
+});
+
 router.get("/:id", function (req, res) {
     const branchId = req.params.id;
     const tables=`tbl_branch

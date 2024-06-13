@@ -11,7 +11,7 @@ router.post("/check", function(req, res) {
     const userPass = req.body.userPass; 
     const userEmail = req.body.userEmail;
     const fields = "user_Id, user_uuid,branch_Id_fk, userName, userEmail, userPassword"; 
-    const where = `userEmail = '${userEmail}'`; 
+    const where = `userEmail = '${userEmail}' AND status_offon='1'`; 
     db.fetchSingle(table, fields, where, (err, results) => {
         if (err) {
             return res.status(400)

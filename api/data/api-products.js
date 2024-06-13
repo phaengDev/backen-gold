@@ -13,21 +13,22 @@ router.post("/create", async function (req, res) {
     let myFileName = '';
     const productuuid = uuidv4();
     const storage = multer.diskStorage({
-        destination: function (req, file, cb) {
+        destination: function (req, file_image, cb) {
             cb(null, './assets/pos');
         },
-        filename: function (req, file, cb) {
-            const ext = path.extname(file.originalname);
+        filename: function (req, file_image, cb) {
+            const ext = path.extname(file_image.originalname);
             myFileName = `${Date.now()}${ext}`;
             cb(null, myFileName);
         }
     });
-
     const table = 'tbl_product';
-    const upload = multer({ storage }).single('file');
+    const upload = multer({ storage }).single('file_image');
     upload(req, res, function (err) {
-        const {product_uuid, tiles_id_fk, qty_baht, option_id_fk, quantity_all } = req.body;
-        if (!product_uuid && product_uuid==='') {
+        
+        const {product_uuid, tiles_id_fk, qty_baht, option_id_fk ,porduct_detail} = req.body;
+        if (!product_uuid && product_uuid  ==='') {
+
             const where = `tiles_id_fk='${tiles_id_fk}' AND qty_baht='${qty_baht}' AND option_id_fk='${option_id_fk}'`;
             db.selectWhere(table, '*', where, (err, results) => {
                 if (err) {
@@ -36,10 +37,11 @@ router.post("/create", async function (req, res) {
                 if (results && results.length >= 1) {
                     return res.status(400).json({ message: 'ມີການບັນທຶກຂໍ້ມູນຊຳກັນ ກະລຸນາປ້ອນຂໍ້ມູນສ່ວນຕ່າງ' });
                 } else {
+
                     db.maxCode(table, 'code_id', (err, code_id) => {
                         let barcode = '';
-                        const fields = 'product_uuid,code_id,barcode, tiles_id_fk,file_image,qty_baht,option_id_fk,quantity_all,create_date';
-                        const data = [productuuid, code_id, barcode, tiles_id_fk, myFileName, qty_baht, option_id_fk, quantity_all, dateTime];
+                        const fields = 'product_uuid,code_id,barcode, tiles_id_fk,file_image,qty_baht,option_id_fk,quantity_all,porduct_detail,create_date';
+                        const data = [productuuid, code_id, '', tiles_id_fk, myFileName, qty_baht, option_id_fk, 0,porduct_detail, dateTime];
                         db.insertData(table, fields, data, (err, results) => {
                             if (err) {
                                 return res.status(500).json({ message: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດ` });
@@ -230,6 +232,7 @@ router.post("/option", function (req, res, next) {
     });
 });
 
+
 router.post("/stock", function (req, res) {
     const { type_id_fk, zone_id_fk, tiles_id_fk, option_id_fk } = req.body;
     let typeId_fk = '';
@@ -294,6 +297,7 @@ router.post('/itemsale', function (req, res) {
     const fields = `product_uuid,option_id_fk,tiles_id_fk,file_image,qty_baht,tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
+    tbl_options.grams as kilogram,
     option_name,tile_name, code_id,quantity,zone_name,bg_color,zone_id_fk`;
     const where = `zone_status='1' ${tile_name} ${zone_id_fk}`;
     db.selectWhere(tables, fields, where, (err, results) => {

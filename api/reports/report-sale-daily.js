@@ -127,6 +127,9 @@ router.post("/veiw/:id", function (req, res) {
 	tbl_sale_detail.price_sale, 
 	tbl_sale_detail.order_qty, 
 	tbl_sale_detail.qty_grams, 
+	tbl_sale_detail.qty_sale_add,
+	tbl_sale_detail.qty_gram_add,
+	tbl_sale_detail.total_balance,
 	tbl_sale_detail.price_pattern, 
 	tbl_sale_detail.zone_id_fk, 
 	tbl_sale_detail.user_id_fk, 
@@ -182,6 +185,9 @@ tbl_sale_detail.price_grams,
 tbl_sale_detail.price_sale, 
 tbl_sale_detail.order_qty, 
 tbl_sale_detail.qty_grams, 
+tbl_sale_detail.qty_sale_add,
+tbl_sale_detail.qty_gram_add,
+tbl_sale_detail.total_balance,
 tbl_sale_detail.price_pattern, 
 tbl_sale_detail.zone_id_fk, 
 tbl_sale_detail.user_id_fk, 
@@ -237,6 +243,9 @@ router.post("/list-cl", function (req, res) {
 	tbl_sale_detail.price_sale, 
 	tbl_sale_detail.order_qty, 
 	tbl_sale_detail.qty_grams, 
+	tbl_sale_detail.qty_sale_add,
+	tbl_sale_detail.qty_gram_add,
+	tbl_sale_detail.total_balance,
 	tbl_sale_detail.price_pattern, 
 	tbl_sale_detail.zone_id_fk, 
 	tbl_sale_detail.user_id_fk, 
@@ -249,7 +258,7 @@ router.post("/list-cl", function (req, res) {
 	tbl_zone_sale.zone_name,
 	tbl_unite.unite_name,
 	concat(tbl_staff.first_name,' ',tbl_staff.last_name) as staff_name `;
-	const where = `status_cancle='2' AND  DATE(tbl_sale_detail.cancle_date) BETWEEN '${start_date}' AND '${end_date}' ${productId_fk} ${tiles_id_fk}  ${zoneId_fk}`;
+	const where = `status_cancle='2' AND  DATE(tbl_sale_detail.cancle_date) BETWEEN '${start_date}' AND '${end_date}' ${productId_fk} ${tiles_id_fk}  ${zoneId_fk} ORDER BY tbl_sale_detail.id ASC`;
 	db.selectWhere(tables, fields, where, (err, results) => {
 		if (err) {
 			return res.status(500).json({ message: 'An error occurred while fetching data.' });
@@ -346,6 +355,8 @@ router.get('/reques/:id', async (req, res) => {
 		tbl_sale_detail.price_sale, 
 		tbl_sale_detail.order_qty, 
 		tbl_sale_detail.qty_grams, 
+		qty_sale_add,
+		qty_gram_add,
 		tbl_sale_detail.price_pattern,
 		tbl_sale_detail.create_date, 
 		tbl_product.code_id, 

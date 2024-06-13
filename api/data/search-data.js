@@ -1,7 +1,6 @@
 const express=require('express');
 const router=express.Router();
 const db = require('../db');
-const { v4: uuidv4 } = require('uuid');
 router.get("/:id", async function (req, res) {
     const bill = req.params.id;
     try {
@@ -14,7 +13,7 @@ router.get("/:id", async function (req, res) {
         if (result) {
             res.status(200).json(result);
         } else {
-            res.status(404).json({ message: 'ບໍ່ພົບເລກບິນທີ່ທ່ານຊອກຫານ' });
+            res.status(4040).json({ message: 'ບໍ່ພົບເລກບິນທີ່ທ່ານຊອກຫານ' });
         }
     });
 } catch (error) {

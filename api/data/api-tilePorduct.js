@@ -68,6 +68,18 @@ router.delete("/:id", function (req, res, next) {
 });
     });
 
+    router.get("/single/:id", function (req, res) {
+        const tile_uuid= req.params.id;
+        const tables=`tbl_product_tile
+        LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id `;
+        const wheres=`tile_uuid='${tile_uuid}'`
+        db.fetchSingleAll(tables,wheres, (err, results) => {
+            if (err) {
+                return res.status(400).send();
+            }
+            res.status(200).json(results);
+        });
+        });
     router.get("/", function (req, res, next) {
         const tables=`tbl_product_tile
         LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id

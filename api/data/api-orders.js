@@ -7,10 +7,14 @@ const currentDatetime = moment();
 const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 const dateNow = currentDatetime.format('YYYY-MM-DD');
 router.post("/create", function (req, res) {
-    const { product_id_fk, price_buy, price_sale, patternPrice, order_qty, qty_grams, zone_id_fk, staff_id_fk, user_id_fk } = req.body;
+    const { product_id_fk, price_buy, price_sale, patternPrice, order_qty,qty_grams,buy_add, qty_add, zone_id_fk, staff_id_fk, user_id_fk } = req.body;
+   let grams_add=buy_add;
+    if(!buy_add || buy_add==='' ){
+        grams_add=0;
+    }
     const table = 'tbl_cart_order';
-    const fields = 'product_id_fk, zone_id_fk,price_buy,price_sale,price_pattern,order_qty,qty_grams,staff_id_fk,user_id_fk,orderDate';
-    const data = [product_id_fk, zone_id_fk, price_buy, price_sale, patternPrice, order_qty, qty_grams, staff_id_fk, user_id_fk, dateTime];
+    const fields = 'product_id_fk, zone_id_fk,price_buy,price_sale,price_pattern,order_qty,qty_grams,grams_add,qty_add,staff_id_fk,user_id_fk,orderDate';
+    const data = [product_id_fk, zone_id_fk, price_buy, price_sale, patternPrice, order_qty,qty_grams,grams_add, qty_add, staff_id_fk, user_id_fk, dateTime];
     const wheres = `product_id_fk='${product_id_fk}' AND staff_id_fk='${staff_id_fk}' AND zone_id_fk='${zone_id_fk}'`;
     db.selectWhere(table, '*', wheres, (err, ress) => {
         if (!ress || ress.length === 0) {
@@ -21,6 +25,14 @@ router.post("/create", function (req, res) {
                 res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: results });
             });
         } else {
+            if(grams_add > 0){
+                db.insertData(table, fields, data, (err, results) => {
+                    if (err) {
+                        return res.status(500).json({ error: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດ` });
+                    }
+                    res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: results });
+                });
+            }else{
             const fieldNew = `order_qty = order_qty + ${order_qty}`;
             const condition = `product_id_fk='${product_id_fk}' AND staff_id_fk='${staff_id_fk}' AND zone_id_fk='${zone_id_fk}'`;
             db.updateField(table, fieldNew, condition, (err, results) => {
@@ -30,8 +42,13 @@ router.post("/create", function (req, res) {
                 res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ' });
             });
         }
+        }
     });
 });
+
+
+
+
 
 router.get('/itemcart/:id', function (req, res) {
     const staff_id_fk = req.params.id;
@@ -52,6 +69,8 @@ router.get('/itemcart/:id', function (req, res) {
     tile_name,
     unite_name,
      order_qty,
+     grams_add,
+     qty_add,
      code_id,
      zone_name,
      zone_id_fk,
@@ -152,12 +171,15 @@ router.post("/payment", function (req, res) {
             if (err) {
                 return res.status(500).json({ message: 'ການດຳເນີນງານເກີດຂໍຜິພາດ' });
             }
-            const fieldList = 'detail_uuid,sale_bill_fk,product_id_fk,price_buy,price_grams,price_sale,price_pattern,order_qty,qty_grams,tatal_balance,zone_id_fk,user_id_fk,staff_id_fk,create_date,status_cancle';
+            const fieldList = 'detail_uuid,sale_bill_fk,product_id_fk,price_buy,price_grams,price_sale,price_pattern,order_qty,qty_grams,qty_sale_add,qty_gram_add,total_balance,zone_id_fk,user_id_fk,staff_id_fk,create_date,status_cancle';
             items.forEach(item => {
                     const detail_uuid = uuidv4()
-                    let tatal_balance = (parseFloat((item.price_sale * item.qty_grams) * item.order_qty) + parseFloat(item.order_qty * item.price_pattern));
+                    let total_balance = parseFloat(
+                        (item.qty_add > 0 ? (item.price_sale * item.grams_add) : (item.price_sale * item.qty_grams) * item.order_qty) +
+                        (item.order_qty * item.price_pattern)
+                      );
                     let price_sale = (parseFloat(item.price_sale * item.qty_grams));
-                    const dataList = [detail_uuid, sale_uuid, item.product_id_fk, item.price_buy, item.price_sale, price_sale, item.price_pattern, item.order_qty, item.qty_grams, tatal_balance, item.zone_id_fk, item.user_id_fk, item.staff_id_fk, dateTime, 1];
+                    const dataList = [detail_uuid, sale_uuid, item.product_id_fk, item.price_buy, item.price_sale, price_sale, item.price_pattern, item.order_qty, item.qty_grams,item.qty_add,item.grams_add, total_balance, item.zone_id_fk, item.user_id_fk, item.staff_id_fk, dateTime, 1];
                     db.insertData(tableList, fieldList, dataList, (err, resultsList) => {
                         if (err) {
                             console.error('Error inserting item:', err);

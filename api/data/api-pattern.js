@@ -1,19 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-router.post("/create", function (req, res) {
-    const { pattern_id, title_id_fk,option_id_fk, pattern_name, pattern_pirce } = req.body;
-    const patternPirce = parseFloat(pattern_pirce.replace(/,/g, ''));
-    const table = 'tbl_pattern';
-    if (pattern_id === '') {
-        const where = `pattern_id='${pattern_id}'`;
-        db.selectWhere(table, '*', where, (err, ress) => {
-            if (!ress || ress.length === 0) {
+const moment = require('moment');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const currentDatetime = moment();
+const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 
-                db.autoId(table, 'pattern_id', (err, pattern_id) => {
-                    const fields = 'pattern_id,title_id_fk,option_id_fk, pattern_name,pattern_pirce';
-                    const data = [pattern_id, title_id_fk,option_id_fk, pattern_name, patternPirce];
-                   
+router.post("/create", async function (req, res) {
+    let imageName = '';
+    const storage = multer.diskStorage({
+        destination: function (req, pattern_img, cb) {
+            cb(null, './assets/pattern');
+        },
+        filename: function (req, pattern_img, cb) {
+            const ext = path.extname(pattern_img.originalname);
+            imageName = `${Date.now()}${ext}`;
+            cb(null, imageName);
+        }
+    });
+    const table = 'tbl_pattern';
+    const upload = multer({ storage }).single('pattern_img');
+    upload(req, res, function (err) {
+      
+    const { patternId, title_id_fk,option_id_fk, pattern_name, pattern_pirce } = req.body;
+    const patternPirce = parseFloat(pattern_pirce.replace(/,/g, ''));
+    if (!patternId) {
+            db.maxCode(table, 'pattern_id', (err, pattern_id) => {
+            const fields = 'pattern_id,title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce';
+            const data = [pattern_id, title_id_fk,option_id_fk,imageName, pattern_name, patternPirce];
+        
                     db.insertData(table, fields, data, (err, results) => {
                         if (err) {
                             console.error('Error inserting data:', err);
@@ -23,13 +40,25 @@ router.post("/create", function (req, res) {
                         res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: results });
                     });
                 });
-            } else {
-                res.status(400).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ' });
-            }
-        });
     } else {
-        const field = 'title_id_fk,option_id_fk, pattern_name,pattern_pirce';
-        const newData = [title_id_fk,option_id_fk, pattern_name, patternPirce, pattern_id];
+        const where = `pattern_id='${patternId}'`;
+        db.selectWhere(table, '*', where, (err, results) => {
+            if (results[0].pattern_img && results[0].pattern_img !== '' && imageName !== '') {
+
+                const filePath = path.join('assets/pattern', results[0].pattern_img);
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting the existing file:', err);
+                    }
+                });
+            }
+            let fileName=results[0].pattern_img;
+            if(imageName !==''){
+                fileName=imageName;
+            }
+
+        const field = 'title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce';
+        const newData = [title_id_fk,option_id_fk,fileName, pattern_name, patternPirce, patternId];
         const condition = 'pattern_id=?';
         db.updateData(table, field, newData, condition, (err, results) => {
             if (err) {
@@ -39,9 +68,11 @@ router.post("/create", function (req, res) {
             // console.log('Data updated successfully:', results);
             res.status(200).json({ message: 'ການແກ້ໄຂຂໍ້ມູນສຳເລັດ33', data: results });
         });
+    });
     }
 });
 
+});
 
 
 router.delete("/:id", function (req, res, next) {
@@ -72,7 +103,7 @@ if(option_id_fk){
     const tables = `tbl_pattern
     LEFT JOIN tbl_product_tile ON tbl_pattern.title_id_fk=tbl_product_tile.tile_uuid
     LEFT JOIN tbl_options ON tbl_pattern.option_id_fk=tbl_options.option_id`;
-    const field = `pattern_id,title_id_fk,option_id_fk,pattern_name,pattern_pirce,option_name,tile_name`;
+    const field = `pattern_id,title_id_fk,option_id_fk,pattern_img,pattern_name,pattern_pirce,option_name,tile_name`;
     const wheres=`pattern_id !='' ${typeId_fk} ${titleId_fk} ${optionId_fk}`;
     db.selectWhere(tables, field,wheres, (err, results) => {
         if (err) {

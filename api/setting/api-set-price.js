@@ -6,6 +6,19 @@ const moment = require('moment');
 const currentDatetime = moment();
 const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 router.post("/create", function (req, res) {
+    let imageName = '';
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, './assets/promotion');
+        },
+        filename: function (req, file, cb) {
+            const ext = path.extname(file.originalname);
+            imageName = `price-${Date.now()}${ext}`;
+            cb(null, imageName);
+        }
+    });
+    const upload = multer({ storage }).single('price_img');
+    upload(req, res, function (err) {
     const { type_id_fk, prices_id, price_buy, price_sale, price_buy_old, price_sale_old } = req.body;
 
     const update_id = uuidv4();
@@ -13,9 +26,9 @@ router.post("/create", function (req, res) {
     const priceSale = parseInt(price_sale.replace(/,/g, ''));
 
     const table = 'tbl_update_price';
-    const fields = 'update_id,price_id_fk,type_id_fk,price_buy_old,price_sale_old,price_buy_new,price_sale_new,update_date';
+    const fields = 'update_id,price_id_fk,type_id_fk,price_buy_old,price_sale_old,price_buy_new,price_sale_new,update_date,price_img';
 
-    const dataup = [update_id, prices_id,type_id_fk, price_buy_old, price_sale_old, priceBuy, priceSale, dateTime];
+    const dataup = [update_id, prices_id,type_id_fk, price_buy_old, price_sale_old, priceBuy, priceSale, dateTime,imageName];
     db.insertData(table, fields, dataup, (err, results) => {
         if (err) {
             console.error('Error inserting data:', err);
@@ -32,6 +45,7 @@ router.post("/create", function (req, res) {
             res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: resultsUp });
         });
     });
+});
 });
 router.post("/", function (req, res) {
     const { typeId, optionId } = req.body;

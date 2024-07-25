@@ -28,9 +28,13 @@ const useStock=require('./api/reports/report-stock')
 const useHome=require('./api/reports/fetch-data-home');
 const useSystem=require('./api/setting/api-system-shop');
 const useSearch=require('./api/data/search-data');
-
+const useSlider=require('./api/website/api-slider');
+const usePromotion=require('./api/website/api-promotion');
+const useNewevent=require('./api/website/api-newevent');
+const useGift=require('./api/website/api-gift-memory')
 const useLogin=require('./api/checklogin');
-
+const useRate=require('./api/setting/api-rateChange');
+const useJob=require('./api/website/api-apply-job')
 //===================== use router
 app.use('/type',useType);
 app.use('/option',useOption);
@@ -53,7 +57,12 @@ app.use('/home',useHome);
 app.use('/system',useSystem);
 app.use('/login',useLogin);
 app.use('/search',useSearch);
-
+app.use('/slider',useSlider);
+app.use('/promotion',usePromotion);
+app.use('/news',useNewevent);
+app.use('/gift',useGift)
+app.use('/rate',useRate)
+app.use('/job',useJob)
 const PORT = process.env.PORT || 3061;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -5,9 +5,6 @@ const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
 const multer = require('multer');
 const path = require('path');
-const currentDatetime = moment();
-const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
-const timeNow = currentDatetime.format('HH:mm:ss');
 router.post("/create", async function (req, res) {
 
 	let nyLogo='';

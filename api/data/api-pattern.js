@@ -25,12 +25,12 @@ router.post("/create", async function (req, res) {
     const upload = multer({ storage }).single('pattern_img');
     upload(req, res, function (err) {
 
-        const { patternId, title_id_fk, option_id_fk, pattern_name, pattern_pirce } = req.body;
+        const { patternId, title_id_fk, option_id_fk, pattern_name, pattern_pirce,pattern_remart } = req.body;
         const patternPirce = parseFloat(pattern_pirce.replace(/,/g, ''));
         if (!patternId) {
             db.maxCode(table, 'pattern_id', (err, pattern_id) => {
-                const fields = 'pattern_id,title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce';
-                const data = [pattern_id, title_id_fk, option_id_fk, imageName, pattern_name, patternPirce];
+                const fields = 'pattern_id,title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce,pattern_remart';
+                const data = [pattern_id, title_id_fk, option_id_fk, imageName, pattern_name, patternPirce,pattern_remart];
 
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
@@ -58,8 +58,8 @@ router.post("/create", async function (req, res) {
                     fileName = imageName;
                 }
 
-                const field = 'title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce';
-                const newData = [title_id_fk, option_id_fk, fileName, pattern_name, patternPirce, patternId];
+                const field = 'title_id_fk,option_id_fk,pattern_img, pattern_name,pattern_pirce,pattern_remart';
+                const newData = [title_id_fk, option_id_fk, fileName, pattern_name, patternPirce,pattern_remart, patternId];
                 const condition = 'pattern_id=?';
                 db.updateData(table, field, newData, condition, (err, results) => {
                     if (err) {
@@ -84,7 +84,6 @@ router.delete("/:id", function (req, res) {
         if (error) {
             return res.status(500).json({ error: 'Error fetching pattern data' });
         }
-
         if (res && res.pattern_img ) {
             const filePath = path.join('assets/pattern/', res.pattern_img);
             fs.unlink(filePath, (err) => {
@@ -119,7 +118,7 @@ router.post("/", function (req, res) {
     const tables = `tbl_pattern
     LEFT JOIN tbl_product_tile ON tbl_pattern.title_id_fk=tbl_product_tile.tile_uuid
     LEFT JOIN tbl_options ON tbl_pattern.option_id_fk=tbl_options.option_id`;
-    const field = `pattern_id,title_id_fk,option_id_fk,pattern_img,pattern_name,pattern_pirce,option_name,tile_name`;
+    const field = `pattern_id,title_id_fk,option_id_fk,pattern_img,pattern_name,pattern_pirce,option_name,tile_name,pattern_remart`;
     const wheres = `pattern_id !='' ${typeId_fk} ${titleId_fk} ${optionId_fk}`;
     db.selectWhere(tables, field, wheres, (err, results) => {
         if (err) {

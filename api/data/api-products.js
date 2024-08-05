@@ -25,9 +25,9 @@ router.post("/create", async function (req, res) {
     const table = 'tbl_product';
     const upload = multer({ storage }).single('file_image');
     upload(req, res, function (err) {
-        
-        const {product_uuid, tiles_id_fk, qty_baht, option_id_fk ,porduct_detail} = req.body;
-        if (!product_uuid && product_uuid  ==='') {
+
+        const { product_uuid, tiles_id_fk, qty_baht, option_id_fk, porduct_detail } = req.body;
+        if (!product_uuid && product_uuid === '') {
 
             const where = `tiles_id_fk='${tiles_id_fk}' AND qty_baht='${qty_baht}' AND option_id_fk='${option_id_fk}'`;
             db.selectWhere(table, '*', where, (err, results) => {
@@ -41,7 +41,7 @@ router.post("/create", async function (req, res) {
                     db.maxCode(table, 'code_id', (err, code_id) => {
                         let barcode = '';
                         const fields = 'product_uuid,code_id,barcode, tiles_id_fk,file_image,qty_baht,option_id_fk,quantity_all,porduct_detail,create_date';
-                        const data = [productuuid, code_id, '', tiles_id_fk, myFileName, qty_baht, option_id_fk, 0,porduct_detail, dateTime];
+                        const data = [productuuid, code_id, '', tiles_id_fk, myFileName, qty_baht, option_id_fk, 0, porduct_detail, dateTime];
                         db.insertData(table, fields, data, (err, results) => {
                             if (err) {
                                 return res.status(500).json({ message: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດ` });
@@ -65,9 +65,9 @@ router.post("/create", async function (req, res) {
                         }
                     });
                 }
-                let fileName=results[0].file_image;
-                if(myFileName !==''){
-                    fileName=myFileName;
+                let fileName = results[0].file_image;
+                if (myFileName !== '') {
+                    fileName = myFileName;
                 }
                 const field = 'tiles_id_fk,file_image,qty_baht,option_id_fk';
                 const newData = [tiles_id_fk, fileName, qty_baht, option_id_fk, product_uuid];
@@ -182,6 +182,8 @@ router.delete("/:id", function (req, res, next) {
         }
     });
 });
+
+
 router.post("/", function (req, res, next) {
     const { type_id_fk, tiles_id_fk, option_id_fk } = req.body;
     let type_idfk = '';
@@ -200,9 +202,14 @@ router.post("/", function (req, res, next) {
         LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
         LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
         LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
-        LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id `;
+        LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
+        LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk `;
     const fields = `product_uuid,code_id,barcode,option_id_fk,tiles_id_fk,qty_baht,
-    quantity_all,typeName,unite_name,option_name,tile_name,create_date,file_image`;
+    quantity_all,typeName,unite_name,option_name,tile_name,create_date,file_image,
+     tbl_price_gold.price_buy,
+    tbl_price_gold.price_sale,
+    (qty_baht*tbl_options.grams) as grams,
+     COALESCE((SELECT SUM(quantity) FROM tbl_stock_sale  WHERE tbl_stock_sale.product_id_fk = tbl_product.product_uuid), 0) AS qty_all`;
     const where = `product_uuid !='' ${type_idfk} ${option_idfk} ${tiles_idfk}`;
     db.selectWhere(tables, fields, where, (err, results) => {
         if (err) {
@@ -307,5 +314,81 @@ router.post('/itemsale', function (req, res) {
         res.status(200).json(results);
     });
 });
+
+
+router.get("/group", function (req, res) {
+    const tables = `tbl_product_tile
+    LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
+    LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
+    LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk`;
+    const fieldTitle = `tile_uuid,tile_code,
+    tbl_price_gold.type_id_fk,
+    tile_name,
+    unite_id_fk,
+    unite_name,
+    typeName,
+    title_detail,
+    title_image, 
+    price_buy,
+    tbl_price_gold.price_sale`;
+
+    const fieldsLis = `product_uuid, 
+    code_id,
+    barcode, 
+    tiles_id_fk, 
+    file_image, 
+    qty_baht, 
+    porduct_detail, 
+    option_name,
+    (qty_baht*tbl_options.grams) as grams`;
+    const tableLis = `tbl_product
+    LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id`;
+    db.selectData(tables, fieldTitle, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+
+        const promises = results.map(contract => {
+            const wheres = `tiles_id_fk = '${contract.tile_uuid}' ORDER BY option_id_fk,qty_baht ASC`;
+            return new Promise((resolve, reject) => {
+                db.selectWhere(tableLis, fieldsLis, wheres, (err, resultsList) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    contract.product = resultsList;
+                    resolve(contract);
+                });
+            });
+        });
+        Promise.all(promises)
+            .then(updatedResults => {
+                res.status(200).json(updatedResults);
+            })
+            .catch(error => {
+                res.status(400).send();
+            });
+
+    });
+});
+
+router.get('/st-group', function (req, res) {
+    const tables = `tbl_stock_sale
+    LEFT JOIN tbl_product ON tbl_stock_sale.product_id_fk=tbl_product.product_uuid
+    LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
+    LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
+    LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
+    GROUP BY product_id_fk  ORDER BY option_id_fk,tiles_id_fk ASC`;
+    const fields = `stock_sale_Id,product_uuid,file_image,qty_baht,
+    (qty_baht*tbl_options.grams) as grams,
+    option_name,tile_name, code_id,sum(quantity) as quantity , unite_name `;
+    db.selectData(tables, fields, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    })
+})
+
+
 module.exports = router;
 

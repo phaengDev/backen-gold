@@ -156,7 +156,7 @@ router.delete("/deleteList/:id", async function (req, res) {
 
 
 router.get("/", function (req, res) {
-    const tables = `tbl_newevent`;
+    const tables = `tbl_newevent ORDER BY event_id ASC`;
     db.selectAll(tables, (err, results) => {
         if (err) {
             return res.status(400).send();
@@ -184,6 +184,33 @@ router.get("/", function (req, res) {
 
     });
 });
+
+
+router.get("/view/:id", function (req, res) {
+    const event_id = req.params.id;
+    const wheresEvent = `event_id=${event_id}`;
+    const tablesEvent = `tbl_newevent`;
+    db.fetchSingleAll(tablesEvent, wheresEvent, (err, eventResults) => {
+        if (err) {
+            return res.status(400).send({ error: 'Error fetching event details' });
+        }
+        if (!eventResults) {
+            return res.status(404).send({ error: 'Event not found' });
+        }
+        const wheresList = `new_id_fk = '${eventResults.event_id}'`;
+        db.selectWhere('tbl_newlist', '*', wheresList, (err, listResults) => {
+            if (err) {
+                return res.status(400).send({ error: 'Error fetching list details' });
+            }
+            const response = {
+                event: eventResults,
+                list: listResults
+            };
+            res.status(200).json(response);
+        });
+    });
+});
+
 
 
 module.exports = router;

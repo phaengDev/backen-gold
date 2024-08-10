@@ -205,7 +205,9 @@ router.post("/", function (req, res, next) {
         LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
         LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk `;
     const fields = `product_uuid,code_id,barcode,option_id_fk,tiles_id_fk,qty_baht,
-    quantity_all,typeName,unite_name,option_name,tile_name,create_date,file_image,
+    quantity_all,typeName,unite_name,option_name,tbl_product_tile.tile_name,
+    tbl_product_tile.title_image,
+    create_date,file_image,
      tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
@@ -268,7 +270,7 @@ router.post("/stock", function (req, res) {
     LEFT JOIN tbl_zone_sale ON tbl_stock_sale.zone_id_fk=tbl_zone_sale.zone_Id
     LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
     LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk`;
-    const fields = `stock_sale_Id,product_uuid,file_image,qty_baht,
+    const fields = `stock_sale_Id,product_uuid,file_image,title_image,qty_baht,
     tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
@@ -301,7 +303,7 @@ router.post('/itemsale', function (req, res) {
     LEFT JOIN tbl_zone_sale ON tbl_stock_sale.zone_id_fk=tbl_zone_sale.zone_Id
     LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
     LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk`;
-    const fields = `product_uuid,option_id_fk,tiles_id_fk,file_image,qty_baht,tbl_price_gold.price_buy,
+    const fields = `product_uuid,option_id_fk,tiles_id_fk,file_image,title_image,qty_baht,tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
     tbl_options.grams as kilogram,
@@ -378,7 +380,7 @@ router.get('/st-group', function (req, res) {
     LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
     LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
     GROUP BY product_id_fk  ORDER BY option_id_fk,tiles_id_fk ASC`;
-    const fields = `stock_sale_Id,product_uuid,file_image,qty_baht,
+    const fields = `stock_sale_Id,product_uuid,file_image,title_image,qty_baht,
     (qty_baht*tbl_options.grams) as grams,
     option_name,tile_name, code_id,sum(quantity) as quantity , unite_name `;
     db.selectData(tables, fields, (err, results) => {

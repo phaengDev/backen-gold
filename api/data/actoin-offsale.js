@@ -32,4 +32,4 @@ if(result && result.length <=0 ){
     });
 }
 }
-})
+});

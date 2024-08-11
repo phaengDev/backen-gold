@@ -4,6 +4,9 @@ const db = require('../db');
 const { v4: uuidv4 } = require('uuid')
 const moment = require('moment');
 const currentDatetime = moment();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 router.post("/create", function (req, res) {
     let imageName = '';
@@ -19,33 +22,33 @@ router.post("/create", function (req, res) {
     });
     const upload = multer({ storage }).single('price_img');
     upload(req, res, function (err) {
-    const { type_id_fk, prices_id, price_buy, price_sale, price_buy_old, price_sale_old } = req.body;
+        const { type_id_fk, prices_id, price_buy, price_sale, price_buy_old, price_sale_old } = req.body;
 
-    const update_id = uuidv4();
-    const priceBuy = parseInt(price_buy.replace(/,/g, ''));
-    const priceSale = parseInt(price_sale.replace(/,/g, ''));
+        const update_id = uuidv4();
+        const priceBuy = parseInt(price_buy.replace(/,/g, ''));
+        const priceSale = parseInt(price_sale.replace(/,/g, ''));
 
-    const table = 'tbl_update_price';
-    const fields = 'update_id,price_id_fk,type_id_fk,price_buy_old,price_sale_old,price_buy_new,price_sale_new,update_date,price_img';
+        const table = 'tbl_update_price';
+        const fields = 'update_id,price_id_fk,type_id_fk,price_buy_old,price_sale_old,price_buy_new,price_sale_new,update_date,price_img';
 
-    const dataup = [update_id, prices_id,type_id_fk, price_buy_old, price_sale_old, priceBuy, priceSale, dateTime,imageName];
-    db.insertData(table, fields, dataup, (err, results) => {
-        if (err) {
-            console.error('Error inserting data:', err);
-            return res.status(500).json({ error: 'ການບັນທຶກຂໍ້ມູນບໍ່ສຳເລັດ' });
-        }
-        const fieldUp = 'price_buy,price_sale';
-        const newData = [priceBuy, priceSale, prices_id];
-        const condition = 'prices_id=? ';
-        db.updateData('tbl_price_gold', fieldUp, newData, condition, (err, resultsUp) => {
+        const dataup = [update_id, prices_id, type_id_fk, price_buy_old, price_sale_old, priceBuy, priceSale, dateTime, imageName];
+        db.insertData(table, fields, dataup, (err, results) => {
             if (err) {
-                console.error('Error updating data:', err);
+                console.error('Error inserting data:', err);
                 return res.status(500).json({ error: 'ການບັນທຶກຂໍ້ມູນບໍ່ສຳເລັດ' });
             }
-            res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: resultsUp });
+            const fieldUp = 'price_buy,price_sale';
+            const newData = [priceBuy, priceSale, prices_id];
+            const condition = 'prices_id=? ';
+            db.updateData('tbl_price_gold', fieldUp, newData, condition, (err, resultsUp) => {
+                if (err) {
+                    console.error('Error updating data:', err);
+                    return res.status(500).json({ error: 'ການບັນທຶກຂໍ້ມູນບໍ່ສຳເລັດ' });
+                }
+                res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: resultsUp });
+            });
         });
     });
-});
 });
 router.post("/", function (req, res) {
     const { typeId, optionId } = req.body;
@@ -82,6 +85,36 @@ router.post("/history", function (req, res) {
         res.status(200).json(results);
     });
 });
+
+
+router.get("/uprice/:id", function (req, res) {
+    const typeId_fk = req.params.id;
+    const wheres = `DATE(update_date) BETWEEN CURRENT_DATE - INTERVAL 30 DAY AND CURRENT_DATE AND type_id_fk='${typeId_fk}'`;
+    const fields = `update_id,
+                price_id_fk,
+                type_id_fk,
+                price_buy_old,
+                price_sale_old,
+                price_buy_new,
+                (price_buy_new-price_buy_old) as buy,
+                price_sale_new,
+                (price_sale_new-price_sale_old) as sale,
+                update_date,
+                price_img,
+                typeName,
+                (SELECT grams FROM tbl_options WHERE option_id=1)AS grams
+                `;
+    const tables = `tbl_update_price
+    LEFT JOIN tbl_type_gold ON tbl_update_price.type_id_fk=tbl_type_gold.type_Id`;
+    db.selectWhere(tables, fields, wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send('ການສະແດງຂໍ້ມູນລົມເຫຼວ');
+        }
+        res.status(200).json(results);
+    });
+});
+
+
 module.exports = router
 
 

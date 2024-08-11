@@ -222,6 +222,52 @@ router.post("/", function (req, res, next) {
 });
 
 
+
+router.get("/single/:id", function (req, res, next) {
+    const product_uuid=req.params.id;
+    const tables = `tbl_product
+        LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
+        LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
+        LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
+        LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk `;
+    const fields = `product_uuid,code_id,
+    option_id_fk,
+    tiles_id_fk,
+    qty_baht,
+    quantity_all,
+    typeName,
+    unite_name,
+    option_name,
+    tbl_product_tile.tile_name,
+    tbl_product_tile.title_image,
+    create_date,file_image,
+     tbl_price_gold.price_buy,
+    tbl_price_gold.price_sale,
+    (qty_baht*tbl_options.grams) as grams`;
+    const where = `product_uuid ='${product_uuid}'`;
+    db.fetchSingle(tables, fields, where, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        const wheresList = `tiles_id_fk = '${results.tiles_id_fk}' AND product_uuid !='${product_uuid}'`;
+        db.selectWhere(tables, fields, wheresList, (err, listResults) => {
+            if (err) {
+                return res.status(400).send({ error: 'Error fetching list details' });
+            }
+            const response = {
+                dataps: results,
+                list: listResults
+            };
+            res.status(200).json(response);
+        });
+        // res.status(200).json(results);
+    });
+});
+
+
+
+
 router.post("/option", function (req, res, next) {
     const { tiles_id_fk, option_id_fk } = req.body;
     let option_idfk = '';

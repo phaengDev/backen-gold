@@ -21,11 +21,12 @@ router.post("/create", async function (req, res) {
     const upload = multer({ storage }).single('gift_img');
     upload(req, res, function (err) {
 
-        const { giftId, gift_name, gift_text} = req.body;
+        const { giftId, gift_name,giftPrice, gift_text} = req.body;
+        const gift_price = parseInt(giftPrice.replace(/,/g, ''));
         if (!giftId) {
             db.autoId(table, 'gift_id', (err, gift_id) => {
-            const fields = 'gift_id,gift_name,gift_text,gift_img';
-            const data = [gift_id, gift_name, gift_text, imageName];
+            const fields = 'gift_id,gift_name,gift_price,gift_text,gift_img';
+            const data = [gift_id, gift_name,gift_price, gift_text, imageName];
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
                         console.error('Error inserting data:', err);
@@ -51,8 +52,8 @@ router.post("/create", async function (req, res) {
                     fileName = imageName;
                 }
 
-                const field = 'gift_name,gift_text,gift_img';
-                const newData = [gift_name, gift_text, fileName, giftId];
+                const field = 'gift_name,gift_price,gift_text,gift_img';
+                const newData = [gift_name,gift_price, gift_text, fileName, giftId];
                 const condition = 'gift_id=?';
                 db.updateData(table, field, newData, condition, (err, results) => {
                     if (err) {

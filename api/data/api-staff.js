@@ -167,5 +167,21 @@ router.post("/search", function (req, res) {
         res.status(200).json(results);
     });
 });
+
+
+router.get("/search/:id", function (req, res) {
+    const staff_uuid = req.params.id;
+    const where = `staff_uuid='${staff_uuid}'`;
+    db.fetchSingleAll('tbl_staff', where, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'ຂໍ້ມູນມີຄວາມຜິດພາດ' });
+        }
+        if (!results || results.length === 0) {
+            return res.status(400).json({ status: 400, message: 'ລະຫັດພະນັກງານບໍ່ຖຶກຕ້ອງ' });
+        }
+        res.status(200).json(results);
+    });
+});
+
 module.exports = router;
 

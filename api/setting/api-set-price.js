@@ -22,12 +22,13 @@ router.post("/create", function (req, res) {
     });
     const upload = multer({ storage }).single('price_img');
     upload(req, res, function (err) {
-        const { type_id_fk, prices_id, price_buy, price_sale, price_buy_old, price_sale_old } = req.body;
+        const { type_id_fk, prices_id, price_buy, price_sale,Decrease, price_buy_old, price_sale_old } = req.body;
 
         const update_id = uuidv4();
-        const priceBuy = parseInt(price_buy.replace(/,/g, ''));
+        // const priceBuy = parseInt(price_buy.replace(/,/g, ''));
         const priceSale = parseInt(price_sale.replace(/,/g, ''));
-
+        const decrease_sale = parseInt(Decrease.replace(/,/g, ''));
+        const priceBuy=(priceSale-decrease_sale);
         const table = 'tbl_update_price';
         const fields = 'update_id,price_id_fk,type_id_fk,price_buy_old,price_sale_old,price_buy_new,price_sale_new,update_date,price_img';
 
@@ -37,8 +38,8 @@ router.post("/create", function (req, res) {
                 console.error('Error inserting data:', err);
                 return res.status(500).json({ error: 'ການບັນທຶກຂໍ້ມູນບໍ່ສຳເລັດ' });
             }
-            const fieldUp = 'price_buy,price_sale';
-            const newData = [priceBuy, priceSale, prices_id];
+            const fieldUp = 'price_buy,price_sale,decrease';
+            const newData = [priceBuy, priceSale,decrease_sale, prices_id];
             const condition = 'prices_id=? ';
             db.updateData('tbl_price_gold', fieldUp, newData, condition, (err, resultsUp) => {
                 if (err) {

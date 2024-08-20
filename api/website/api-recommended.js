@@ -23,12 +23,11 @@ router.post("/create", async function (req, res) {
     const table = 'tbl_recommended';
     const upload = multer({ storage }).single('recd_image');
     upload(req, res, function (err) {
-        const { recomendedId, title_id_fk, recomennde_name, optoin_id_fk, qty_baht, price_sale, recd_remark } = req.body;
-        const priceSale = parseInt(price_sale.replace(/,/g, ''));
+        const { recomendedId, title_id_fk, recomennde_name, optoin_id_fk, qty_baht, recd_remark } = req.body;
         if (!recomendedId) {
             db.autoId(table, 'recomended_id', (err, recomended_id) => {
-                const fields = 'recomended_id,title_id_fk,recomennde_name,optoin_id_fk,qty_baht,price_sale,recd_remark,recd_image';
-                const data = [recomended_id, title_id_fk, recomennde_name, optoin_id_fk, qty_baht, priceSale, recd_remark, imageName];
+                const fields = 'recomended_id,title_id_fk,recomennde_name,optoin_id_fk,qty_baht,recd_remark,recd_image';
+                const data = [recomended_id, title_id_fk, recomennde_name, optoin_id_fk, qty_baht,  recd_remark, imageName];
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
                         console.error('Error inserting data:', err);
@@ -54,8 +53,8 @@ router.post("/create", async function (req, res) {
                     fileName = imageName;
                 }
 
-                const field = 'title_id_fk,recomennde_name,optoin_id_fk,qty_baht,price_sale,recd_remark,recd_image';
-                const newData = [title_id_fk, recomennde_name, optoin_id_fk, qty_baht, priceSale, recd_remark, fileName, recomendedId];
+                const field = 'title_id_fk,recomennde_name,optoin_id_fk,qty_baht,recd_remark,recd_image';
+                const newData = [title_id_fk, recomennde_name, optoin_id_fk, qty_baht,  recd_remark, fileName, recomendedId];
                 const condition = 'recomended_id=?';
                 db.updateData(table, field, newData, condition, (err, results) => {
                     if (err) {
@@ -107,11 +106,12 @@ router.get("/", function (req, res) {
                 recomennde_name,
                 optoin_id_fk,
                 qty_baht,
-                price_sale,
                 recd_remark,
                 recd_image,
                 tile_name,
-                option_name`;
+                option_name,
+                grams,
+              (SELECT (price_sale*grams) FROM tbl_price_gold WHERE type_id_fk=1) AS price_sale`;
     db.selectData(tables, fields, (err, results) => {
         if (err) {
             return res.status(400).send();

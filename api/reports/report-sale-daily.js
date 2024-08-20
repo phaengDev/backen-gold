@@ -18,6 +18,7 @@ router.post("/report", function (req, res) {
 	const start_date = startDate.substring(0, 10);
 	const end_date = endDate.substring(0, 10);
 	const tables = `tbl_sale_gold
+	LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 	LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
 	LEFT JOIN tbl_user_acount ON  tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid`;
@@ -35,10 +36,15 @@ router.post("/report", function (req, res) {
 	tbl_sale_gold.user_id_fk, 
 	tbl_sale_gold.staff_id_fk, 
 	tbl_sale_gold.customer_id_fk, 
+	tbl_sale_gold.currency_id_fk,
 	tbl_sale_gold.sale_remark, 
 	tbl_sale_gold.sale_date, 
 	tbl_sale_gold.sale_status, 
 	tbl_sale_gold.sale_can_date, 
+	tbl_sale_gold.balance_totalpay,
+	oac_currency.currency_name,
+	oac_currency.genus,
+	oac_currency.genus_laos,
 	tbl_staff.first_name, 
 	tbl_staff.last_name, 
 	tbl_customer.cus_fname, 
@@ -68,6 +74,7 @@ router.post("/r-cancle", function (req, res) {
 	const start_date = startDate.substring(0, 10);
 	const end_date = endDate.substring(0, 10);
 	const tables = `tbl_sale_gold
+	LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 	LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
 	LEFT JOIN tbl_user_acount AS A ON  tbl_sale_gold.user_id_fk = A.user_uuid
@@ -86,10 +93,16 @@ router.post("/r-cancle", function (req, res) {
 	tbl_sale_gold.user_id_fk, 
 	tbl_sale_gold.staff_id_fk, 
 	tbl_sale_gold.customer_id_fk, 
+	tbl_sale_gold.currency_id_fk,
 	tbl_sale_gold.sale_remark, 
 	tbl_sale_gold.sale_date, 
 	tbl_sale_gold.sale_status, 
 	tbl_sale_gold.sale_can_date, 
+	tbl_sale_gold.rate_price,
+	tbl_sale_gold.balance_totalpay,
+	oac_currency.currency_name,
+	oac_currency.genus,
+	oac_currency.genus_laos,
 	tbl_staff.first_name, 
 	tbl_staff.last_name, 
 	tbl_customer.cus_fname, 
@@ -302,6 +315,7 @@ router.get('/reques/:id', async (req, res) => {
 	  const sale_uuid = req.params.id;
 	  const wheres = `sale_uuid='${sale_uuid}'`;
 	  const tables = `tbl_sale_gold
+	   LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 		LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 		LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
 		LEFT JOIN tbl_user_acount ON tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid
@@ -313,6 +327,7 @@ router.get('/reques/:id', async (req, res) => {
 		tbl_sale_gold.bill_shop,
 		tbl_sale_gold.balance_total, 
 		tbl_sale_gold.balance_vat,
+		tbl_sale_gold.balance_totalpay,
 		tbl_sale_gold.status_payment, 
 		tbl_sale_gold.balance_cash, 
 		tbl_sale_gold.balance_transfer, 
@@ -331,7 +346,10 @@ router.get('/reques/:id', async (req, res) => {
 		tbl_branch.branch_email,
 		tbl_branch.village_name,
 		district_name,
-		province_name`;
+		province_name,
+		currency_name,
+		genus,
+		rate_price`;
 	  const results = await new Promise((resolve, reject) => {
 		db.fetchSingle(tables, fields, wheres, (err, results) => {
 		  if (err) {

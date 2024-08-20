@@ -133,7 +133,7 @@ router.get('/minuscart/:id', function (req, res) {
 
 //=======================
 router.post("/payment", function (req, res) {
-    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, bill_shop, balance_total, total_grams, balance_cash, balance_transfer, balance_payment, balance_return } = req.body;
+    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, bill_shop, balance_total,currency_id_fk,rate_price, total_grams, balance_cash, balance_transfer, balance_payment, balance_return,balance_totalpay } = req.body;
     const sale_uuid = uuidv4();
     let cus_uuid = uuidv4();
     const tableCut = 'tbl_customer';
@@ -154,8 +154,13 @@ router.post("/payment", function (req, res) {
     if (typeof balance_return === 'string') {
         balanceReturn = parseFloat(balance_return.replace(/,/g, ''));
     }
+    let balanceTotalpay = balance_totalpay;
+    if (typeof balance_totalpay === 'string') {
+        balanceTotalpay = parseFloat(balance_totalpay.replace(/,/g, ''));
+    }
+    // const balance_totalpay = parseFloat(req.body.balance_totalpay.replace(/,/g, ''));
 
-    if (cus_fname && cus_tel && customId === '') {
+    if (customId === '') {
         const fieldCus = `cus_uuid,cus_fname,cus_lname,cus_tel,cus_address,cus_remark,cus_status,cus_reate_date`;
         const dataCus = [cus_uuid, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, '1', dateTime]
         db.insertData(tableCut, fieldCus, dataCus, (err, resct) => { resct })
@@ -165,8 +170,8 @@ router.post("/payment", function (req, res) {
     ELSE CONCAT('VK-', LPAD(MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) + 1, 4, '0')) END AS sale_billNo`;
     db.selectData(tableSale, billNo, (req, ress) => {
         const sale_billNo = ress[0].sale_billNo;
-        const fieldSale = 'sale_uuid,sale_billNo,bill_shop,total_grams,balance_vat,balance_total,status_payment,balance_cash,balance_transfer,balance_payment,balance_return,branch_id_fk,user_id_fk,staff_id_fk,customer_id_fk,sale_remark,sale_date,sale_status,status_off_sale';
-        const dataSale = [sale_uuid, sale_billNo, bill_shop, total_grams,0, balance_total, 1, balanceCash, balanceTransfer, balance_payment, balanceReturn, branch_id_fk, user_id_fk, staff_id_fk, cus_uuid, sale_remark, dateTime, '1', '1'];
+        const fieldSale = 'sale_uuid,sale_billNo,bill_shop,total_grams,balance_vat,balance_total,currency_id_fk,rate_price,balance_totalpay,status_payment,balance_cash,balance_transfer,balance_payment,balance_return,branch_id_fk,user_id_fk,staff_id_fk,customer_id_fk,sale_remark,sale_date,sale_status,status_off_sale';
+        const dataSale = [sale_uuid, sale_billNo, bill_shop, total_grams,0, balance_total,currency_id_fk,rate_price,balanceTotalpay, 1, balanceCash, balanceTransfer, balance_payment, balanceReturn, branch_id_fk, user_id_fk, staff_id_fk, cus_uuid, sale_remark, dateTime, '1', '1'];
         db.insertData(tableSale, fieldSale, dataSale, (err, resultstl) => {
             if (err) {
                 return res.status(500).json({ message: 'ການດຳເນີນງານເກີດຂໍຜິພາດ' });

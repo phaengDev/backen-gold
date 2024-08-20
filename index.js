@@ -58,15 +58,18 @@ app.use('/home',useHome);
 app.use('/system',useSystem);
 app.use('/login',useLogin);
 app.use('/search',useSearch);
+app.use('/rate',useRate);
+
 
 app.use('/slider',useSlider);
 app.use('/promotion',usePromotion);
 app.use('/news',useNewevent);
 app.use('/gift',useGift);
-app.use('/rate',useRate);
 app.use('/job',useJob);
 app.use('/recd',useRecd);
 const PORT = process.env.PORT || 3091;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+ 

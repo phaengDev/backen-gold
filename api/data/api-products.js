@@ -241,6 +241,7 @@ router.get("/single/:id", function (req, res, next) {
     option_name,
     tbl_product_tile.tile_name,
     tbl_product_tile.title_image,
+    tbl_product_tile.title_detail,
     create_date,file_image,
      tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
@@ -288,8 +289,25 @@ router.post("/option", function (req, res, next) {
 });
 
 
+router.get("/option/:id", function (req, res, next) {
+    const tiles_id_fk=req.params.id;
+   
+    const tables = `tbl_product
+        LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id`;
+    const fields = `product_uuid,qty_baht,option_name,tile_name`;
+    const where = `tiles_id_fk='${tiles_id_fk}' `;
+    db.selectWhere(tables, fields, where, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
 router.post("/stock", function (req, res) {
-    const { type_id_fk, zone_id_fk, tiles_id_fk, option_id_fk } = req.body;
+    const { type_id_fk, zone_id_fk, tiles_id_fk, option_id_fk,qty_baht } = req.body;
     let typeId_fk = '';
     if (type_id_fk && type_id_fk !== '') {
         typeId_fk = `AND type_id_fk='${type_id_fk}'`;
@@ -307,7 +325,10 @@ router.post("/stock", function (req, res) {
     if (option_id_fk && option_id_fk !== '') {
         option_idfk = `AND option_id_fk='${option_id_fk}'`;
     }
-
+let qtybaht='';
+if (qty_baht && qty_baht !== '') {
+    qtybaht = `AND qty_baht='${qty_baht}'`;
+}
     const tables = `tbl_stock_sale
     LEFT JOIN tbl_product ON tbl_stock_sale.product_id_fk=tbl_product.product_uuid
     LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
@@ -321,7 +342,7 @@ router.post("/stock", function (req, res) {
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
     option_name,tile_name, code_id,quantity, unite_name,zone_name,typeName`;
-    const where = `product_uuid !='' ${typeId_fk} ${zoneId_fk} ${tilesId_fk} ${option_idfk}`;
+    const where = `product_uuid !='' ${typeId_fk} ${zoneId_fk} ${tilesId_fk} ${option_idfk} ${qtybaht}`;
     db.selectWhere(tables, fields, where, (err, results) => {
         if (err) {
             return res.status(400).send();

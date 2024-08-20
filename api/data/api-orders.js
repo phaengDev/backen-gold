@@ -180,7 +180,7 @@ router.post("/payment", function (req, res) {
             items.forEach(item => {
                     const detail_uuid = uuidv4()
                     let total_balance = parseFloat(
-                        (item.qty_add > 0 ? (item.price_sale * item.grams_add) : (item.price_sale * item.qty_grams) * item.order_qty) +
+                        (item.qty_add > 0 ? (item.price_sale * item.grams_add) : (item.price_sale * item.qty_grams)) +
                         (item.order_qty * item.price_pattern)
                       );
                     let price_sale = (parseFloat(item.price_sale * item.qty_grams));
@@ -216,6 +216,7 @@ router.post("/payment", function (req, res) {
 router.post("/bill", function (req, res) {
     const { billNo_number } = req.body;
     const tables = `tbl_sale_gold
+    LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 	LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
 	LEFT JOIN tbl_user_acount ON  tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid`;
@@ -232,6 +233,9 @@ router.post("/bill", function (req, res) {
 	tbl_sale_gold.sale_date, 
 	tbl_sale_gold.sale_status, 
 	tbl_sale_gold.sale_can_date, 
+    oac_currency.currency_name,
+	oac_currency.genus,
+	oac_currency.genus_laos,
 	tbl_staff.first_name, 
 	tbl_staff.last_name, 
     concat(cus_fname,' ',cus_lname) as customeName,
@@ -245,7 +249,7 @@ router.post("/bill", function (req, res) {
    tbl_sale_detail.order_qty, 
    tbl_sale_detail.qty_grams, 
    tbl_sale_detail.price_pattern, 
-   (qty_grams*price_sale*order_qty + order_qty*price_pattern) as balance_total,
+   (price_sale + order_qty*price_pattern) as balance_total,
    tbl_sale_detail.create_date, 
    tbl_product.code_id, 
    tbl_product.qty_baht,  

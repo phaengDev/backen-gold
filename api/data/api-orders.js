@@ -133,7 +133,7 @@ router.get('/minuscart/:id', function (req, res) {
 
 //=======================
 router.post("/payment", function (req, res) {
-    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, bill_shop, balance_total,currency_id_fk,rate_price, total_grams, balance_cash, balance_transfer, balance_payment, balance_return,balance_totalpay } = req.body;
+    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, bill_shop, balance_total,currency_id_fk,rate_price, total_grams, balance_cash, balance_transfer, balance_return,balance_totalpay } = req.body;
     const sale_uuid = uuidv4();
     let cus_uuid = uuidv4();
     const tableCut = 'tbl_customer';
@@ -158,7 +158,7 @@ router.post("/payment", function (req, res) {
     if (typeof balance_totalpay === 'string') {
         balanceTotalpay = parseFloat(balance_totalpay.replace(/,/g, ''));
     }
-    // const balance_totalpay = parseFloat(req.body.balance_totalpay.replace(/,/g, ''));
+    const balance_payment=(balanceCash+balanceTransfer);
 
     if (customId === '') {
         const fieldCus = `cus_uuid,cus_fname,cus_lname,cus_tel,cus_address,cus_remark,cus_status,cus_reate_date`;

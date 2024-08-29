@@ -18,6 +18,7 @@ router.post("/create", function (req, res) {
         res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: resultsUp });
     });
 });
+
 router.get("/", function (req, res) {
     db.selectAll('tbl_options', (err, results) => {
         if (err) {

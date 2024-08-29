@@ -21,6 +21,9 @@ const autoId = (table, fields, callback) => {
         callback(null, generatedId);
     });
 };
+
+
+
 const maxCode = (table, fields, callback) => {
     connection.query(`SELECT MAX(${fields}) AS maxid FROM ${table}`, (err, results, fields) => {
         if (err) {

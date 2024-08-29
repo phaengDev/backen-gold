@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const currentDatetime = moment();
+const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 router.post("/create", async function (req, res) {
     let imageName = '';
     const storage = multer.diskStorage({
@@ -22,13 +23,13 @@ router.post("/create", async function (req, res) {
     const upload = multer({ storage }).single('job_image');
     upload(req, res, function (err) {
 
-        const { apply_jobId, apply_job_title, apply_job_text,start_date,end_date} = req.body;
-        const startDate=moment(start_date).format('YYYY-MM-DD')
-        const endDate=moment(end_date).format('YYYY-MM-DD')
+        const { apply_jobId, apply_job_title, apply_job_text, start_date, end_date } = req.body;
+        const startDate = moment(start_date).format('YYYY-MM-DD')
+        const endDate = moment(end_date).format('YYYY-MM-DD')
         if (!apply_jobId) {
             db.autoId(table, 'apply_job_id', (err, apply_job_id) => {
-            const fields = 'apply_job_id,apply_job_title,apply_job_text,start_date,end_date,job_image,statususe';
-            const data = [apply_job_id, apply_job_title, apply_job_text,startDate,endDate, imageName,1];
+                const fields = 'apply_job_id,apply_job_title,apply_job_text,start_date,end_date,job_image,statususe';
+                const data = [apply_job_id, apply_job_title, apply_job_text, startDate, endDate, imageName, 1];
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
                         console.error('Error inserting data:', err);
@@ -55,7 +56,7 @@ router.post("/create", async function (req, res) {
                 }
 
                 const field = 'apply_job_title,apply_job_text,start_date,end_date,job_image';
-                const newData = [apply_job_title, apply_job_text, startDate,endDate,fileName, apply_jobId];
+                const newData = [apply_job_title, apply_job_text, startDate, endDate, fileName, apply_jobId];
                 const condition = 'apply_job_id=?';
                 db.updateData(table, field, newData, condition, (err, results) => {
                     if (err) {
@@ -99,13 +100,13 @@ router.delete("/:id", function (req, res) {
 
 
 router.post("/", function (req, res) {
-    const {start_date,end_date}=req.body;
-    const startDate=moment(start_date).format('YYYY-MM-DD')
-    const endDate=moment(end_date).format('YYYY-MM-DD')
-    let whereDate=``;
-if(start_date && end_date){
-    whereDate=`AND start_date BETWEEN '${startDate}' AND '${endDate}'`;
-}
+    const { start_date, end_date } = req.body;
+    const startDate = moment(start_date).format('YYYY-MM-DD')
+    const endDate = moment(end_date).format('YYYY-MM-DD')
+    let whereDate = ``;
+    if (start_date && end_date) {
+        whereDate = `AND start_date BETWEEN '${startDate}' AND '${endDate}'`;
+    }
     const tables = `tbl_apply_for_job`;
     const wheres = `apply_job_id !='' ${whereDate}`;
     db.selectWhere(tables, '*', wheres, (err, results) => {
@@ -115,5 +116,65 @@ if(start_date && end_date){
         res.status(200).json(results);
     });
 });
+
+
+
+router.get("/", function (req, res) {
+    const tables = `tbl_apply_for_job`;
+    const wheres = `apply_job_id !='' ORDER BY apply_job_id DESC`;
+    db.selectWhere(tables, '*', wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+router.get("/single/:id", function (req, res) {
+    const jboId = req.params.id;
+    const tables = `tbl_apply_for_job`;
+    const wheres = `apply_job_id ='${jboId}'`;
+    db.fetchSingleAll(tables, wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
+
+// =====================
+router.post("/register", async function (req, res) {
+    let doctName = '';
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, './assets/job');
+        },
+        filename: function (req, file, cb) {
+            const ext = path.extname(file.originalname);
+            doctName = `fileRegist-${Date.now()}${ext}`;
+            cb(null, doctName);
+        }
+    });
+    const table = 'tbl_register_applyjob';
+    const upload = multer({ storage }).single('staff_doct');
+    upload(req, res, function (err) {
+        const { apply_job_fk, staff_name, staff_phone, staff_email, staff_address } = req.body;
+        const fields = 'registerjob_id,apply_job_fk, staff_name, staff_phone,staff_email,staff_address,staff_doct,status_use,register_date';
+        db.autoId(table, 'registerjob_id', (err, registerjob_id) => {
+        const data = [registerjob_id, apply_job_fk, staff_name, staff_phone, staff_email, staff_address, doctName, 1, dateTime];
+        db.insertData(table, fields, data, (err, results) => {
+            if (err) {
+                console.error('Error inserting data:', err);
+                return res.status(500).json({ error: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດaa` });
+            }
+            res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ'});
+        });
+    });
+    });
+});
+
+
 
 module.exports = router;

@@ -50,6 +50,7 @@ router.post("/report", function (req, res) {
 	tbl_customer.cus_fname, 
 	tbl_customer.cus_lname, 
 	tbl_customer.cus_tel, 
+	tbl_customer.cus_address,
 	tbl_user_acount.userName,status_off_sale,date_off_sale`;
 	const where = `tbl_sale_gold.sale_status='1' AND  DATE(sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${status_off_sale} ORDER BY sale_id ASC`;
 	db.selectWhere(tables, fields, where, (err, results) => {

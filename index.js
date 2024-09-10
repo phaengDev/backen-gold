@@ -35,7 +35,9 @@ const useGift=require('./api/website/api-gift-memory')
 const useLogin=require('./api/checklogin');
 const useRate=require('./api/setting/api-rateChange');
 const useJob=require('./api/website/api-apply-job');
-const useRecd=require('./api/website/api-recommended')
+const useRecd=require('./api/website/api-recommended');
+const usePaysale=require('./api/data/api-paysale_web');
+
 //===================== use router
 app.use('/type',useType);
 app.use('/option',useOption);
@@ -67,6 +69,7 @@ app.use('/news',useNewevent);
 app.use('/gift',useGift);
 app.use('/job',useJob);
 app.use('/recd',useRecd);
+app.use('/paysale',usePaysale);
 const PORT = process.env.PORT || 3091;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

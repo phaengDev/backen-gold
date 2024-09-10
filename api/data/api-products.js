@@ -204,10 +204,22 @@ router.post("/", function (req, res, next) {
         LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
         LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
         LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk `;
-    const fields = `product_uuid,code_id,barcode,option_id_fk,tiles_id_fk,qty_baht,
-    quantity_all,typeName,unite_name,option_name,tbl_product_tile.tile_name,
+    const fields = `product_uuid,
+    tbl_product_tile.tile_code,
+    code_id,
+    CONCAT(tile_code,'-',code_id) as code_gold,
+    barcode,
+    option_id_fk,
+    tiles_id_fk,
+    qty_baht,
+    quantity_all,
+    typeName,
+    unite_name,
+    option_name,
+    tbl_product_tile.tile_name,
     tbl_product_tile.title_image,
-    create_date,file_image,
+    create_date,
+    file_image,
      tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
@@ -337,7 +349,9 @@ if (qty_baht && qty_baht !== '') {
     LEFT JOIN tbl_zone_sale ON tbl_stock_sale.zone_id_fk=tbl_zone_sale.zone_Id
     LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
     LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk`;
-    const fields = `stock_sale_Id,product_uuid,file_image,title_image,qty_baht,
+    const fields = `stock_sale_Id,product_uuid,
+    CONCAT(tile_code,'-',code_id) as code_gold,
+    file_image,title_image,qty_baht,
     tbl_price_gold.price_buy,
     tbl_price_gold.price_sale,
     (qty_baht*tbl_options.grams) as grams,
@@ -363,6 +377,7 @@ router.post('/itemsale', function (req, res) {
         tile_name = `AND tile_name='${posductName}' OR code_id='${posductName}'`;
     }
 
+
     const tables = `tbl_stock_sale
     LEFT JOIN tbl_product ON tbl_stock_sale.product_id_fk=tbl_product.product_uuid
     LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
@@ -375,12 +390,33 @@ router.post('/itemsale', function (req, res) {
     (qty_baht*tbl_options.grams) as grams,
     tbl_options.grams as kilogram,
     option_name,tile_name, code_id,quantity,zone_name,bg_color,zone_id_fk`;
+    
     const where = `zone_status='1' ${tile_name} ${zone_id_fk}`;
     db.selectWhere(tables, fields, where, (err, results) => {
         if (err) {
             return res.status(400).send();
         }
-        res.status(200).json(results);
+
+        const promises = results.map(contract => {
+            const wheres = `title_id_fk = '${contract.tiles_id_fk}' AND option_id_fk='${contract.option_id_fk}'`;
+            return new Promise((resolve, reject) => {
+                db.selectWhere('tbl_pattern', '*', wheres, (err, resultsList) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    contract.patternList = resultsList;
+                    resolve(contract);
+                });
+            });
+        });
+        Promise.all(promises)
+        .then(updatedResults => {
+            res.status(200).json(updatedResults);
+        })
+        .catch(error => {
+            res.status(400).send();
+        });
+        // res.status(200).json(results);
     });
 });
 

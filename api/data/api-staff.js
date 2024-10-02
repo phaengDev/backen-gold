@@ -43,6 +43,52 @@ router.post("/create", function (req, res) {
     });
 });
 
+// ================================
+router.post('/confrim', function (req, res) {
+    const staff_uuid = uuidv4();
+
+    let nyPorfile = '';
+    const storage = multer.diskStorage({
+        destination: function (req, profile, cb) {
+            cb(null, './assets/porfile');
+        },
+        filename: function (req, profile, cb) {
+            const ext = path.extname(profile.originalname);
+            nyPorfile = `${Date.now()}${ext}`;
+            cb(null, nyPorfile);
+        }
+    });
+    const upload = multer({ storage }).single('profile');
+    upload(req, res, function (err) {
+        const { first_name, last_name, birthday, gender, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date, registerjob_fk} = req.body;
+        const table = 'tbl_staff';
+        db.autoId(table, 'id', (err, id) => {
+            const id_code = 'VK-' + id;
+            const fields = 'id,staff_uuid, id_code,profile,gender,first_name,last_name,birthday,staff_tel,staff_email,province_id_fk,district_id_fk,village_name,staff_remark,branch_id_fk,register_date,status_inout,create_date';
+            const dataValue = [id, staff_uuid, id_code, nyPorfile, gender, first_name, last_name, birthday, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date, '1', dateTime];
+            db.insertData(table, fields, dataValue, (err, results) => {
+                if (err) {
+                    console.error('Error inserting data:', err);
+                    return res.status(500).json({ error: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດ` });
+                }
+
+                const field = 'status_use';
+                const newData = [2, registerjob_fk];
+                const condition = 'registerjob_id=?';
+                db.updateData('tbl_register_applyjob', field, newData, condition, (err, results) => {
+                    if (err) {
+                        console.error('Error updating data:', err);
+                        return res.status(500).json({ error: 'ແກ້ໄຂຂໍ້ມູນບໍ່ສຳເລັດ ກະລຸນາກວອສອນແລ້ວລອງໃໝ່ອິກຄັ້ງ' });
+                    }
+                    console.log('Data updated successfully:', results);
+                    res.status(200).json({ message: 'ການແກ້ໄຂຂໍ້ມູນສຳເລັດ', data: results });
+                });
+            });
+        });
+    });
+})
+
+
 
 router.post("/edit", function (req, res) {
     let nyPorfile = '';
@@ -172,7 +218,24 @@ router.post("/search", function (req, res) {
 router.get("/search/:id", function (req, res) {
     const staff_uuid = req.params.id;
     const where = `staff_uuid='${staff_uuid}'`;
-    db.fetchSingleAll('tbl_staff', where, (err, results) => {
+    const fileds=`tbl_staff.staff_uuid, 
+	tbl_staff.id_code, 
+	tbl_staff.profile, 
+	tbl_staff.gender, 
+	tbl_staff.first_name, 
+	tbl_staff.last_name, 
+	tbl_staff.staff_tel, 
+	tbl_branch.branch_name, 
+	tbl_branch.branch_tel, 
+	tbl_branch.village_name, 
+	tbl_branch.branch_logo, 
+	tbl_district.district_name, 
+	tbl_province.province_name`;
+const tables=`tbl_staff
+	LEFT JOIN tbl_branch ON tbl_staff.branch_id_fk = tbl_branch.branch_uuid
+	LEFT JOIN tbl_district ON tbl_branch.district_id_fk = tbl_district.district_id
+	LEFT JOIN tbl_province ON tbl_district.province_id_fk = tbl_province.province_id`;
+    db.fetchSingle(tables,fileds, where, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'ຂໍ້ມູນມີຄວາມຜິດພາດ' });
         }

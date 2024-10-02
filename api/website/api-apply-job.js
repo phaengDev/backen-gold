@@ -5,6 +5,7 @@ const moment = require('moment');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { exit } = require('process');
 const currentDatetime = moment();
 const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 router.post("/create", async function (req, res) {
@@ -163,18 +164,82 @@ router.post("/register", async function (req, res) {
         const { apply_job_fk, staff_name, staff_phone, staff_email, staff_address } = req.body;
         const fields = 'registerjob_id,apply_job_fk, staff_name, staff_phone,staff_email,staff_address,staff_doct,status_use,register_date';
         db.autoId(table, 'registerjob_id', (err, registerjob_id) => {
-        const data = [registerjob_id, apply_job_fk, staff_name, staff_phone, staff_email, staff_address, doctName, 1, dateTime];
-        db.insertData(table, fields, data, (err, results) => {
-            if (err) {
-                console.error('Error inserting data:', err);
-                return res.status(500).json({ error: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດaa` });
-            }
-            res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ'});
+            const data = [registerjob_id, apply_job_fk, staff_name, staff_phone, staff_email, staff_address, doctName, 1, dateTime];
+            db.insertData(table, fields, data, (err, results) => {
+                if (err) {
+                    console.error('Error inserting data:', err);
+                    return res.status(500).json({ error: `ການບັນທຶກຂໍ້ມູນບໍ່ສ້ຳເລັດaa` });
+                }
+                res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ' });
+            });
         });
-    });
     });
 });
 
+
+router.post("/fetchRegis", function (req, res) {
+    const { start_date, end_date, statusUse } = req.body;
+    // const startDate = moment(start_date).format('YYYY-MM-DD')
+    // const endDate = moment(end_date).format('YYYY-MM-DD')
+    const startDate = moment(start_date).isValid() ? moment(start_date).format('YYYY-MM-DD') : null;
+    const endDate = moment(end_date).isValid() ? moment(end_date).format('YYYY-MM-DD') : null;
+
+    let whereDate = ``;
+    if (start_date && end_date) {
+        whereDate = `AND DATE(register_date) BETWEEN '${startDate}' AND '${endDate}'`;
+    }
+    let status_use = '';
+    if (statusUse) {
+        status_use = `AND status_use='${statusUse}'`;
+    }
+
+    const tables = `tbl_register_applyjob
+    LEFT JOIN tbl_apply_for_job ON tbl_register_applyjob.apply_job_fk=tbl_apply_for_job.apply_job_id`;
+    const fileds = `tbl_register_applyjob.registerjob_id, 
+	tbl_register_applyjob.apply_job_fk, 
+	tbl_register_applyjob.staff_name, 
+	tbl_register_applyjob.staff_phone, 
+	tbl_register_applyjob.staff_email, 
+	tbl_register_applyjob.staff_address, 
+	tbl_register_applyjob.staff_doct, 
+	tbl_register_applyjob.status_use, 
+	tbl_register_applyjob.register_date, 
+	tbl_apply_for_job.apply_job_title`;
+    const wheres = `registerjob_id !='' ${whereDate} ${status_use}`;
+    db.selectWhere(tables, '*', wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+router.delete('/del-regist/:id', function (req, res) {
+    const registerjob_id = req.params.id;
+    const wheres = `registerjob_id='${registerjob_id}'`;
+    db.deleteData('tbl_register_applyjob', wheres, (deleteError, deleteResults) => {
+        if (deleteError) {
+            return res.status(500).json({ error: 'ຂໍອະໄພການລືບຂໍ້ມູນບໍ່ສຳເລັດ' });
+        }
+        res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ', data: deleteResults });
+    });
+});
+
+
+router.get('/can-regist/:id', function (req, res) {
+    const registerjob_id = req.params.id;
+    const field = 'status_use';
+    const newData = [3, registerjob_id];
+    const condition = 'registerjob_id=?';
+    db.updateData('tbl_register_applyjob', field, newData, condition, (err, results) => {
+        if (err) {
+            console.error('Error updating data:', err);
+            return res.status(500).json({ error: 'ແກ້ໄຂຂໍ້ມູນບໍ່ສຳເລັດ ກະລຸນາກວອສອນແລ້ວລອງໃໝ່ອິກຄັ້ງ' });
+        }
+        console.log('Data updated successfully:', results);
+        res.status(200).json({ message: 'ການແກ້ໄຂຂໍ້ມູນສຳເລັດ', data: results });
+    });
+});
 
 
 module.exports = router;

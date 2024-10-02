@@ -31,8 +31,8 @@ router.post('/create', upload.array('fileList'), async (req, res) => {
                     console.error('Error generating event_id:', err);
                     return res.status(500).json({ error: 'Error generating event_id' });
                 }
-                const fields = 'event_id, titleName, newText, newDate';
-                const data = [newEventId, titleName, newText, dateTime];
+                const fields = 'event_id, titleName, newText,status_news, newDate';
+                const data = [newEventId, titleName, newText,1, dateTime];
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
                         console.error('Error inserting data:', err);
@@ -156,7 +156,7 @@ router.delete("/deleteList/:id", async function (req, res) {
 
 
 router.get("/", function (req, res) {
-    const tables = `tbl_newevent ORDER BY event_id ASC`;
+    const tables = `tbl_newevent WHERE status_news=1 ORDER BY event_id ASC`;
     db.selectAll(tables, (err, results) => {
         if (err) {
             return res.status(400).send();

@@ -53,7 +53,6 @@ router.post("/create", async function (req, res) {
             });
 
         } else {
-
             const where = `product_uuid='${product_uuid}'`;
             db.selectWhere(table, '*', where, (err, results) => {
                 if (results[0].file_image && results[0].file_image !== '' && myFileName !== '') {
@@ -234,9 +233,46 @@ router.post("/", function (req, res, next) {
 });
 
 
+router.get("/type/:id", function (req, res, next) {
+    const type_id_fk = req.params.id;
+    const tables = `tbl_product
+        LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
+        LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
+        LEFT JOIN tbl_type_gold ON tbl_product_tile.type_id_fk=tbl_type_gold.type_Id
+        LEFT JOIN tbl_price_gold ON tbl_type_gold.type_Id=tbl_price_gold.type_id_fk `;
+    const fields = `product_uuid,
+    tbl_product_tile.tile_code,
+    code_id,
+    CONCAT(tile_code,'-',code_id) as code_gold,
+    barcode,
+    option_id_fk,
+    tiles_id_fk,
+    qty_baht,
+    quantity_all,
+    typeName,
+    unite_name,
+    option_name,
+    tbl_product_tile.tile_name,
+    tbl_product_tile.title_image,
+    create_date,
+    file_image,
+     tbl_price_gold.price_buy,
+    tbl_price_gold.price_sale,
+    (qty_baht*tbl_options.grams) as grams`;
+    const where = `tiles_id_fk ='${type_id_fk}'`;
+    db.selectWhere(tables, fields, where, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
 
 router.get("/single/:id", function (req, res, next) {
-    const product_uuid=req.params.id;
+    const product_uuid = req.params.id;
     const tables = `tbl_product
         LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
         LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
@@ -301,9 +337,39 @@ router.post("/option", function (req, res, next) {
 });
 
 
+router.post("/pdAll", function (req, res, next) {
+    const {tiles_id_fk, option_id_fk } = req.body;
+    let tiles_idfk = '';
+    if(tiles_id_fk && tiles_id_fk !== 'null'){
+        tiles_idfk = `AND tbl_product.tiles_id_fk='${tiles_id_fk}'`;
+    }
+    let option_idfk = '';
+    if(option_id_fk && option_id_fk !== 'null'){
+        option_idfk = `AND tbl_product.option_id_fk='${option_id_fk}'`;
+    }
+
+    const tables = `tbl_product
+        LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id`;
+    const fields = `tbl_product.*, 
+	tbl_product_tile.tile_uuid, 
+	tbl_product_tile.tile_code, 
+	tbl_product_tile.type_id_fk, 
+	tbl_product_tile.tile_name, 
+	tbl_options.option_name`;
+    const wheres=`product_uuid !='' ${tiles_idfk} ${option_idfk}`;
+    db.selectWhere(tables, fields,wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
 router.get("/option/:id", function (req, res, next) {
-    const tiles_id_fk=req.params.id;
-   
+    const tiles_id_fk = req.params.id;
+
     const tables = `tbl_product
         LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
         LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id`;
@@ -319,7 +385,7 @@ router.get("/option/:id", function (req, res, next) {
 
 
 router.post("/stock", function (req, res) {
-    const { type_id_fk, zone_id_fk, tiles_id_fk, option_id_fk,qty_baht } = req.body;
+    const { type_id_fk, zone_id_fk, tiles_id_fk, option_id_fk, qty_baht } = req.body;
     let typeId_fk = '';
     if (type_id_fk && type_id_fk !== '') {
         typeId_fk = `AND type_id_fk='${type_id_fk}'`;
@@ -337,10 +403,10 @@ router.post("/stock", function (req, res) {
     if (option_id_fk && option_id_fk !== '') {
         option_idfk = `AND option_id_fk='${option_id_fk}'`;
     }
-let qtybaht='';
-if (qty_baht && qty_baht !== '') {
-    qtybaht = `AND qty_baht='${qty_baht}'`;
-}
+    let qtybaht = '';
+    if (qty_baht && qty_baht !== '') {
+        qtybaht = `AND qty_baht='${qty_baht}'`;
+    }
     const tables = `tbl_stock_sale
     LEFT JOIN tbl_product ON tbl_stock_sale.product_id_fk=tbl_product.product_uuid
     LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
@@ -390,7 +456,7 @@ router.post('/itemsale', function (req, res) {
     (qty_baht*tbl_options.grams) as grams,
     tbl_options.grams as kilogram,
     option_name,tile_name, code_id,quantity,zone_name,bg_color,zone_id_fk`;
-    
+
     const where = `zone_status='1' ${tile_name} ${zone_id_fk}`;
     db.selectWhere(tables, fields, where, (err, results) => {
         if (err) {
@@ -410,12 +476,12 @@ router.post('/itemsale', function (req, res) {
             });
         });
         Promise.all(promises)
-        .then(updatedResults => {
-            res.status(200).json(updatedResults);
-        })
-        .catch(error => {
-            res.status(400).send();
-        });
+            .then(updatedResults => {
+                res.status(200).json(updatedResults);
+            })
+            .catch(error => {
+                res.status(400).send();
+            });
         // res.status(200).json(results);
     });
 });
@@ -491,9 +557,22 @@ router.get('/st-group', function (req, res) {
             return res.status(400).send();
         }
         res.status(200).json(results);
-    })
-})
+    });
+});
 
 
+
+router.get('/groupby', function (req, res) {
+    const tables = `tbl_product  
+LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
+GROUP BY option_id_fk,qty_baht ORDER BY option_id_fk,qty_baht ASC`;
+    const fields = `option_id_fk,qty_baht,option_name`;
+    db.selectData(tables, fields, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
 module.exports = router;
 

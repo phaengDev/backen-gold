@@ -78,7 +78,7 @@ router.delete("/:id", function (req, res, next) {
     const where = `tile_uuid='${tile_uuid}'`;
     const whereck = `tiles_id_fk='${tile_uuid}'`;
     db.selectWhere('tbl_product', '*', whereck, (err, ress) => {
-        if (ress || ress.length === 0) {
+        if (ress || ress.length <= 0) {
 
             db.fetchSingle('tbl_product_tile', '*', where, (error, tile) => {
                 if (error) {

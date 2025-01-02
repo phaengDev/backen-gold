@@ -50,7 +50,8 @@ router.delete("/:id", function (req, res, next) {
 
 router.get("/", function (req, res, next) {
     const tables = `oac_currency`;
-    db.selectAll(tables, (err, results) => {
+    const wheres=`statusUse='1'`;
+    db.selectWhere(tables,'*',wheres, (err, results) => {
         if (err) {
             return res.status(400).send();
         }

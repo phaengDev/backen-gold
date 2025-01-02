@@ -12,25 +12,26 @@ router.post("/create", async function (req, res) {
     let imageName = '';
     const storage = multer.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, './assets/promotion');
+            cb(null, './assets/slider');
         },
         filename: function (req, file, cb) {
             const ext = path.extname(file.originalname);
-            imageName = `${Date.now()}${ext}`;
+            imageName = `p-${Date.now()}${ext}`;
             cb(null, imageName);
         }
     });
-    const table = 'tbl_promotion';
-    const upload = multer({ storage }).single('pro_image');
+
+
+    const table = 'tbl_py_centers';
+    const upload = multer({ storage }).single('pcenter_image');
     upload(req, res, function (err) {
 
-        const { promotionId, promotion_title, promotion_detail,start_date,end_date} = req.body;
-        const startDate=moment(start_date).format('YYYY-MM-DD')
-        const endDate=moment(end_date).format('YYYY-MM-DD')
-        if (!promotionId) {
-            db.autoId(table, 'promotion_id', (err, promotion_id) => {
-            const fields = 'promotion_id,promotion_title,promotion_detail,pro_image,start_date,end_date';
-            const data = [promotion_id, promotion_title, promotion_detail, imageName,startDate,endDate];
+        const { pcenterId, pcenter_name, description } = req.body;
+        if (!pcenterId) {
+
+            db.autoId(table, 'pcenter_id', (err, pcenter_id) => {
+                const fields = 'pcenter_id,pcenter_image,pcenter_name,description';
+                const data = [pcenter_id, imageName, pcenter_name, description];
                 db.insertData(table, fields, data, (err, results) => {
                     if (err) {
                         console.error('Error inserting data:', err);
@@ -40,25 +41,27 @@ router.post("/create", async function (req, res) {
                     res.status(200).json({ message: 'ການດຳເນີນງານສຳເລັດແລ້ວ' });
                 });
             });
+
         } else {
-            const where = `promotion_id='${promotionId}'`;
+
+            const where = `pcenter_id='${pcenterId}'`;
             db.selectWhere(table, '*', where, (err, results) => {
-                if (results[0].pro_image && results[0].pro_image !== '' && imageName !== '') {
-                    const filePath = path.join('assets/promotion', results[0].pro_image);
+                if (results[0].pcenter_image && results[0].pcenter_image !== '' && imageName !== '') {
+                    const filePath = path.join('assets/slider', results[0].pcenter_image);
                     fs.unlink(filePath, (err) => {
                         if (err) {
                             console.error('Error deleting the existing file:', err);
                         }
                     });
                 }
-                let fileName = results[0].pro_image;
+                let fileName = results[0].pcenter_image;
                 if (imageName !== '') {
                     fileName = imageName;
                 }
 
-                const field = 'promotion_title,promotion_detail,pro_image,start_date,end_date';
-                const newData = [promotion_title, promotion_detail, fileName,startDate,endDate, promotionId];
-                const condition = 'promotion_id=?';
+                const field = 'pcenter_name,description,pcenter_image';
+                const newData = [pcenter_name, description, fileName, pcenterId];
+                const condition = 'pcenter_id=?';
                 db.updateData(table, field, newData, condition, (err, results) => {
                     if (err) {
                         console.error('Error updating data:', err);
@@ -74,14 +77,15 @@ router.post("/create", async function (req, res) {
 
 
 router.delete("/:id", function (req, res) {
-    const promotion_id = req.params.id;
-    const where = `promotion_id=${promotion_id}`;
-    db.fetchSingle('tbl_promotion', '*', where, (fetchError, fetchResult) => {
+    const pcenter_id = req.params.id;
+    const where = `pcenter_id=${pcenter_id}`;
+
+    db.fetchSingle('tbl_py_centers', '*', where, (fetchError, fetchResult) => {
         if (fetchError) {
             return res.status(500).json({ error: 'Error fetching pattern data' });
         }
-        if (fetchResult && fetchResult.pro_image) {
-            const filePath = path.join('assets/promotion/', fetchResult.pro_image);
+        if (fetchResult && fetchResult.pcenter_image) {
+            const filePath = path.join('assets/slider/', fetchResult.pcenter_image);
             fs.unlink(filePath, (unlinkError) => {
                 if (unlinkError) {
                     console.error('Error deleting the existing file:', unlinkError);
@@ -89,7 +93,7 @@ router.delete("/:id", function (req, res) {
             });
         }
 
-        db.deleteData('tbl_promotion', where, (deleteError, deleteResults) => {
+        db.deleteData('tbl_py_centers', where, (deleteError, deleteResults) => {
             if (deleteError) {
                 return res.status(500).json({ error: 'ຂໍອະໄພການລືບຂໍ້ມູນບໍ່ສຳເລັດ' });
             }
@@ -101,21 +105,8 @@ router.delete("/:id", function (req, res) {
 
 
 router.get("/", function (req, res) {
-    const tables = `tbl_promotion`;
-    const wheres = `promotion_id !=''`;
-    db.selectWhere(tables, '*', wheres, (err, results) => {
-        if (err) {
-            return res.status(400).send();
-        }
-        res.status(200).json(results);
-    });
-});
-
-
-router.get("/limit/:qty", function (req, res) {
-    const limit = parseInt(req.params.qty, 10);
-    const tables = `tbl_promotion`;
-    const wheres = `promotion_id !='' ORDER BY promotion_id DESC LIMIT ${limit}`;
+    const tables = `tbl_py_centers`;
+    const wheres = `pcenter_id !=''`;
     db.selectWhere(tables, '*', wheres, (err, results) => {
         if (err) {
             return res.status(400).send();

@@ -100,7 +100,7 @@ router.delete("/:id", function (req, res) {
 router.get("/", function (req, res) {
     const tables = `tbl_recommended
         LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid
-        LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id`;
+        LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id ORDER BY recomended_id DESC`;
     const fields = `recomended_id,
                 title_id_fk,
                 recomennde_name,
@@ -119,5 +119,107 @@ router.get("/", function (req, res) {
         res.status(200).json(results);
     });
 });
+
+
+
+router.get("/title/:typeId", function (req, res) {
+    const title_id_fk = req.params.typeId;
+
+    const tables = `tbl_recommended
+        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id`;
+    const fields = `recomended_id,
+                title_id_fk,
+                recomennde_name,
+                optoin_id_fk,
+                qty_baht,
+                recd_remark,
+                recd_image,
+                tile_name,
+                option_name,
+                grams,
+              (SELECT (price_sale*grams) FROM tbl_price_gold WHERE type_id_fk=1) AS price_sale`;
+              const wheres = `title_id_fk = '${title_id_fk}' ORDER BY optoin_id_fk,qty_baht ASC`;
+    db.selectWhere(tables, fields,wheres, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
+router.get("/limit/:qty", function (req, res) {
+    const qty=params.qty;
+    const tables = `tbl_recommended
+        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id ORDER BY recomended_id DESC LIMIT ${qty}`;
+    const fields = `recomended_id,
+                title_id_fk,
+                recomennde_name,
+                optoin_id_fk,
+                qty_baht,
+                recd_remark,
+                recd_image,
+                tile_name,
+                option_name,
+                grams,
+              (SELECT (price_sale*grams) FROM tbl_price_gold WHERE type_id_fk=1) AS price_sale`;
+    db.selectData(tables, fields, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        res.status(200).json(results);
+    });
+});
+
+
+
+router.get("/g-recom", function (req, res) {
+    const tables = `tbl_recommended
+        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid  GROUP BY title_id_fk`;
+    const fieldTitle = `title_id_fk, tile_name`;
+
+    const fieldsLis = `recomended_id,
+	title_id_fk,
+	recomennde_name,
+	optoin_id_fk,
+	qty_baht,
+	recd_remark,
+	recd_image,
+	tile_name,
+	option_name,
+	grams,
+    (SELECT (price_sale*grams) FROM tbl_price_gold WHERE type_id_fk=1) AS price_sale`;
+    const tableLis = `tbl_recommended
+        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid
+        LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id`;
+    db.selectData(tables, fieldTitle, (err, results) => {
+        if (err) {
+            return res.status(400).send();
+        }
+        const promises = results.map(contract => {
+            const wheres = `title_id_fk = '${contract.title_id_fk}' ORDER BY optoin_id_fk,qty_baht ASC`;
+            return new Promise((resolve, reject) => {
+                db.selectWhere(tableLis, fieldsLis, wheres, (err, resultsList) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    contract.recommended = resultsList;
+                    resolve(contract);
+                });
+            });
+        });
+        Promise.all(promises)
+            .then(updatedResults => {
+                res.status(200).json(updatedResults);
+            })
+            .catch(error => {
+                res.status(400).send();
+            });
+
+    });
+});
+
 
 module.exports = router;

@@ -118,25 +118,19 @@ router.get("/price/:id", async function (req, res) {
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // JavaScript months are 0-based
 
-    // const qtyDays = getDaysInMonth(year, month);
-    // const dates = [];
-    // const results = [];
-
-    // for (let day = 1; day <= qtyDays; day++) {
-    //     const dayStr = String(day).padStart(2, '0'); // Zero-pad the day
-    //     const date = `${year}-${month}-${dayStr}`;
-
-    //     dates.push(`${dayStr}/${month}`);
-    // }
-// function getDaysInMonth(year, month) {
-//     return new Date(year, month, 0).getDate();
-// }
-
-const fields = `price_sale_new, price_buy_new,(SELECT grams FROM tbl_options WHERE option_id='1') as grams,DATE_FORMAT(update_date, '%d/%m') AS update_date`;
-const wheres = `type_id_fk='${type}' GROUP BY update_date ORDER BY _id ASC LIMIT 30`;
+const fields = ` price_sale_new, 
+    price_buy_new,
+    (SELECT grams FROM tbl_options WHERE option_id = '1') AS grams,
+    DATE_FORMAT(update_date, '%d/%m') AS update_date`;
+const wheres = `type_id_fk='${type}' AND update_date = (
+        SELECT MAX(update_date) 
+        FROM tbl_update_price t2 
+        WHERE DATE(t1.update_date) = DATE(t2.update_date)
+    )
+    ORDER BY  _id ASC LIMIT 30`;
         try {
             const results = await new Promise((resolve, reject) => {
-              db.selectWhere('tbl_update_price', fields, wheres, (err, results) => {
+              db.selectWhere(' tbl_update_price t1', fields, wheres, (err, results) => {
                 if (err) {
                   return reject(err);
                 }

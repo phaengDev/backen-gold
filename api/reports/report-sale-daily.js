@@ -20,6 +20,8 @@ router.post("/report", async function async(req, res) {
 	LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
 	LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
+	LEFT JOIN tbl_district ON tbl_customer.district_id_fk = tbl_district.district_id
+	LEFT JOIN tbl_province ON tbl_district.district_id = tbl_province.province_id
 	LEFT JOIN tbl_user_acount ON  tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid`;
 	const fields = `
     tbl_sale_gold.sale_uuid, 
@@ -49,26 +51,33 @@ router.post("/report", async function async(req, res) {
 	tbl_customer.cus_fname, 
 	tbl_customer.cus_lname, 
 	tbl_customer.cus_tel, 
-	tbl_customer.cus_address,
+	tbl_customer.villageName,
+	tbl_district.district_name,
+	tbl_province.province_name,
 	tbl_user_acount.userName,status_off_sale,date_off_sale`;
 
 
-//============= datal list 
-const tableList = `tbl_sale_detail 
+	//============= datal list 
+	const tableList = `tbl_sale_detail 
 LEFT JOIN tbl_product ON tbl_sale_detail.product_id_fk = tbl_product.product_uuid
 LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk = tbl_product_tile.tile_uuid
 LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk = tbl_unite.unite_uuid
 LEFT JOIN tbl_options ON tbl_product.option_id_fk = tbl_options.option_id
 LEFT JOIN tbl_zone_sale ON tbl_sale_detail.zone_id_fk = tbl_zone_sale.zone_Id`;
-const fieldList = `tbl_sale_detail.detail_uuid, 
-  tbl_sale_detail.price_grams,
-  tbl_sale_detail.price_sale, 
-  tbl_sale_detail.order_qty, 
-  tbl_sale_detail.qty_grams, 
-  qty_sale_add,
-  qty_gram_add,
-  tbl_sale_detail.price_pattern,
-  tbl_sale_detail.create_date, 
+	const fieldList = `tbl_sale_detail.detail_uuid, 
+	tbl_sale_detail.sale_bill_fk, 
+	tbl_sale_detail.product_id_fk, 
+	tbl_sale_detail.price_grams,
+	tbl_sale_detail.price_sale, 
+	tbl_sale_detail.order_qty, 
+	tbl_sale_detail.qty_grams, 
+	tbl_sale_detail.qty_sale_add,
+	tbl_sale_detail.qty_gram_add,
+	tbl_sale_detail.total_balance,
+	tbl_sale_detail.price_pattern, 
+	tbl_sale_detail.zone_id_fk, 
+	tbl_sale_detail.user_id_fk, 
+	tbl_sale_detail.create_date, 
   tbl_product.code_id, 
   tbl_product.qty_baht, 
   tbl_product.file_image, 
@@ -76,8 +85,6 @@ const fieldList = `tbl_sale_detail.detail_uuid,
   tbl_options.option_name, 
   tbl_zone_sale.zone_name,
   tbl_unite.unite_name`;
-
-	
 	const where = `tbl_sale_gold.sale_status='1' AND  DATE(sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${status_off_sale} ORDER BY sale_id ASC`;
 	db.selectWhere(tables, fields, where, (err, results) => {
 		if (err) {
@@ -104,6 +111,119 @@ const fieldList = `tbl_sale_detail.detail_uuid,
 			});
 	});
 });
+
+
+router.post('/getmoney', function (req, resp) {
+	const { startDate, endDate, staffId, status_gets } = req.body;
+	let staff_id_fk = '';
+	if (staffId) {
+		staff_id_fk = `AND staff_id_fk='${staffId}'`;
+	}
+	let statusGets = '';
+	if (status_gets) {
+		statusGets = `AND status_gets='${status_gets}'`;
+	}
+	const start_date = startDate.substring(0, 10);
+	const end_date = endDate.substring(0, 10);
+	const tables = `tbl_sale_gold
+	LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
+	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
+	LEFT JOIN tbl_customer ON tbl_sale_gold.customer_id_fk = tbl_customer.cus_uuid
+	LEFT JOIN tbl_district ON tbl_customer.district_id_fk = tbl_district.district_id
+	LEFT JOIN tbl_province ON tbl_district.district_id = tbl_province.province_id
+	LEFT JOIN tbl_user_acount ON  tbl_sale_gold.user_id_fk = tbl_user_acount.user_uuid
+	`;
+	const fields = `
+    tbl_sale_gold.sale_uuid, 
+	tbl_sale_gold.sale_billNo, 
+	tbl_sale_gold.bill_shop,
+	tbl_sale_gold.balance_total, 
+	tbl_sale_gold.status_payment, 
+	tbl_sale_gold.balance_cash, 
+	tbl_sale_gold.balance_transfer, 
+	tbl_sale_gold.balance_payment, 
+	tbl_sale_gold.balance_return, 
+	tbl_sale_gold.branch_id_fk, 
+	tbl_sale_gold.user_id_fk, 
+	tbl_sale_gold.staff_id_fk, 
+	tbl_sale_gold.customer_id_fk, 
+	tbl_sale_gold.currency_id_fk,
+	tbl_sale_gold.sale_remark, 
+	tbl_sale_gold.sale_date, 
+	tbl_sale_gold.sale_status, 
+	tbl_sale_gold.sale_can_date, 
+	tbl_sale_gold.balance_totalpay,
+	tbl_sale_gold.status_gets,
+	tbl_sale_gold.date_gets,
+	oac_currency.currency_name,
+	oac_currency.genus,
+	oac_currency.genus_laos,
+	tbl_staff.first_name, 
+	tbl_staff.last_name, 
+	tbl_customer.cus_fname, 
+	tbl_customer.cus_lname, 
+	tbl_customer.cus_tel, 
+	tbl_customer.villageName,
+	tbl_district.district_name,
+	tbl_province.province_name,
+	tbl_user_acount.userName,status_off_sale,date_off_sale
+	`;
+
+	//============= datal list 
+	const tableList = `tbl_sale_detail 
+LEFT JOIN tbl_product ON tbl_sale_detail.product_id_fk = tbl_product.product_uuid
+LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk = tbl_product_tile.tile_uuid
+LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk = tbl_unite.unite_uuid
+LEFT JOIN tbl_options ON tbl_product.option_id_fk = tbl_options.option_id
+LEFT JOIN tbl_zone_sale ON tbl_sale_detail.zone_id_fk = tbl_zone_sale.zone_Id`;
+	const fieldList = `tbl_sale_detail.detail_uuid, 
+	tbl_sale_detail.sale_bill_fk, 
+	tbl_sale_detail.product_id_fk, 
+	tbl_sale_detail.price_grams,
+	tbl_sale_detail.price_sale, 
+	tbl_sale_detail.order_qty, 
+	tbl_sale_detail.qty_grams, 
+	tbl_sale_detail.qty_sale_add,
+	tbl_sale_detail.qty_gram_add,
+	tbl_sale_detail.total_balance,
+	tbl_sale_detail.price_pattern, 
+	tbl_sale_detail.zone_id_fk, 
+	tbl_sale_detail.user_id_fk, 
+	tbl_sale_detail.create_date,
+	tbl_product.code_id, 
+	tbl_product.qty_baht, 
+	tbl_product.file_image, 
+	tbl_product_tile.tile_name, 
+	tbl_options.option_name, 
+	tbl_zone_sale.zone_name,
+	tbl_unite.unite_name`;
+	const where = `tbl_sale_gold.sale_status='1' AND  DATE(tbl_sale_gold.sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${statusGets}  ORDER BY sale_id ASC`;
+	db.selectWhere(tables, fields, where, (err, results) => {
+		if (err) {
+			return resp.status(500).json({ message: 'An error occurred while fetching data.' });
+		}
+		const promises = results.map(contract => {
+			const whereList = `tbl_sale_detail.sale_bill_fk='${contract.sale_uuid}'`;
+			return new Promise((resolve, reject) => {
+				db.selectWhere(tableList, fieldList, whereList, (err, saleList) => {
+					if (err) {
+						return reject(err);
+					}
+					contract.dataList = saleList;
+					resolve(contract);
+				});
+			});
+		})
+		Promise.all(promises)
+			.then(updatedResults => {
+				resp.status(200).json(updatedResults);
+			})
+			.catch(error => {
+				resp.status(400).send();
+			});
+	});
+});
+
 
 //=====================
 router.post("/r-cancle", function (req, res) {
@@ -443,6 +563,36 @@ router.get('/reques/:id', async (req, res) => {
 
 	res.status(200).json(results);
 
+});
+
+router.post('/list-qty', async (req, res) => {
+	const {startDate, endDate, option_id_fk,  product_id_fk} = req.body;
+
+	let optionId_fk=``;
+	if(option_id_fk){
+		optionId_fk=`AND tbl_product.option_id_fk='${option_id_fk}'`;
+	}
+	let productId_fk=``;
+	if(product_id_fk){
+		productId_fk=`AND tbl_product.tiles_id_fk='${product_id_fk}'`;
+	}
+
+	const start_date = moment(startDate).format('YYYY-MM-DD');
+	const end_date = moment(endDate).format('YYYY-MM-DD');
+	const tableList = `tbl_sale_detail 
+	  LEFT JOIN tbl_product ON tbl_sale_detail.product_id_fk = tbl_product.product_uuid
+	  LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk = tbl_product_tile.tile_uuid
+	  LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk = tbl_unite.unite_uuid
+	  LEFT JOIN tbl_options ON tbl_product.option_id_fk = tbl_options.option_id`;
+	const fieldList = `CONCAT(tile_code,'-',code_id) AS pos_code ,tbl_sale_detail.create_date ,tile_name,option_name,tbl_product.qty_baht, SUM(order_qty) AS orderqty,tbl_unite.unite_name,
+			SUM(total_balance) AS total_balance`;
+	const whereList = `tbl_sale_detail.status_cancle='1' AND DATE(tbl_sale_detail.create_date) BETWEEN '${start_date}' AND '${end_date}' ${optionId_fk} ${productId_fk} GROUP BY product_id_fk`;
+	db.selectWhere(tableList, fieldList, whereList, (err, saleList) => {
+		if (err) {
+			return res.status(500).json({ message: 'An error occurred while fetching data.' });
+		}
+		res.status(200).json(saleList);
+	});
 });
 
 module.exports = router;

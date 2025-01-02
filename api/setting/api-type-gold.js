@@ -74,7 +74,18 @@ router.patch("/:id", function (req, res) {
 //=================================
 
 router.get('/option',function(req,res){
-    db.selectAll('tbl_options',(err, results) => {
+    const wheres=`option_id !=4`
+    db.selectWhere('tbl_options','*',wheres,(err, results) => {
+        if (err) {
+            return res.status(400).send('ການສະແດງຂໍ້ມູນລົມເຫຼວ');
+        }
+        res.status(200).json(results);
+    });
+})
+
+router.get('/option-lm',function(req,res){
+    const wheres=`option_id IN (1, 4)`
+    db.selectWhere('tbl_options','*',wheres,(err, results) => {
         if (err) {
             return res.status(400).send('ການສະແດງຂໍ້ມູນລົມເຫຼວ');
         }

@@ -156,7 +156,7 @@ router.delete("/deleteList/:id", async function (req, res) {
 
 
 router.get("/", function (req, res) {
-    const tables = `tbl_newevent WHERE status_news=1 ORDER BY event_id ASC`;
+    const tables = `tbl_newevent WHERE status_news=1 ORDER BY event_id DESC`;
     db.selectAll(tables, (err, results) => {
         if (err) {
             return res.status(400).send();

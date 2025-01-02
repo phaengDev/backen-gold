@@ -133,7 +133,7 @@ router.get('/minuscart/:id', function (req, res) {
 
 //=======================
 router.post("/payment", function (req, res) {
-    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, bill_shop, balance_total,currency_id_fk,rate_price, total_grams, balance_cash, balance_transfer, balance_return,balance_totalpay } = req.body;
+    const { items, branch_id_fk, user_id_fk, staff_id_fk, sale_remark, customId, cus_fname, cus_lname, cus_tel, district_id_fk,villageName, cus_remark, bill_shop, balance_total,currency_id_fk,rate_price, total_grams, balance_cash, balance_transfer, balance_return,balance_totalpay } = req.body;
     const sale_uuid = uuidv4();
     let cus_uuid = uuidv4();
     const tableCut = 'tbl_customer';
@@ -142,29 +142,34 @@ router.post("/payment", function (req, res) {
     if (customId || customId !== '') {
         cus_uuid = customId;
     }
+    
     let balanceCash = balance_cash;
     if (typeof balance_cash === 'string') {
-        balanceCash = parseFloat(balance_cash.replace(/,/g, ''));
+       balanceCash = Math.round(parseFloat(balance_cash.replace(/,/g, '')));
     }
     let balanceTransfer = balance_transfer;
     if (typeof balance_transfer === 'string') {
-        balanceTransfer = parseFloat(balance_transfer.replace(/,/g, ''));
+        balanceTransfer = Math.round(parseFloat(balance_transfer.replace(/,/g, '')));
+        // balanceTransfer = parseFloat(balance_transfer.replace(/,/g, ''));
     }
     let balanceReturn = balance_return;
     if (typeof balance_return === 'string') {
-        balanceReturn = parseFloat(balance_return.replace(/,/g, ''));
+        balanceReturn = Math.round(parseFloat(balance_return.replace(/,/g, '')));
+        // balanceReturn = parseFloat(balance_return.replace(/,/g, ''));
     }
     let balanceTotalpay = balance_totalpay;
     if (typeof balance_totalpay === 'string') {
-        balanceTotalpay = parseFloat(balance_totalpay.replace(/,/g, ''));
+        balanceTotalpay = Math.round(parseFloat(balance_totalpay.replace(/,/g, '')));
+        // balanceTotalpay = parseFloat(balance_totalpay.replace(/,/g, ''));
     }
     const balance_payment=(balanceCash+balanceTransfer);
 
     if (customId === '') {
-        const fieldCus = `cus_uuid,cus_fname,cus_lname,cus_tel,cus_address,cus_remark,cus_status,cus_reate_date`;
-        const dataCus = [cus_uuid, cus_fname, cus_lname, cus_tel, cus_address, cus_remark, '1', dateTime]
+        const fieldCus = `cus_uuid,cus_fname,cus_lname,cus_tel,district_id_fk,villageName,cus_remark,cus_status,cus_reate_date`;
+        const dataCus = [cus_uuid, cus_fname, cus_lname, cus_tel,district_id_fk, villageName, cus_remark, '1', dateTime]
         db.insertData(tableCut, fieldCus, dataCus, (err, resct) => { resct })
     }
+
     const billNo = `CASE 
     WHEN MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) IS NULL THEN 'VK-0001'
     ELSE CONCAT('VK-', LPAD(MAX(CAST(SUBSTRING(sale_billNo, 4) AS UNSIGNED)) + 1, 4, '0')) END AS sale_billNo`;

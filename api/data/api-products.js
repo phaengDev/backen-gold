@@ -548,7 +548,8 @@ router.get('/st-group', function (req, res) {
     LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk=tbl_product_tile.tile_uuid
     LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
     LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
-    GROUP BY product_id_fk  ORDER BY option_id_fk,tiles_id_fk ASC`;
+    GROUP BY product_id_fk ,stock_sale_Id,product_uuid,file_image,title_image,qty_baht
+     ORDER BY option_id_fk,tiles_id_fk ASC`;
     const fields = `stock_sale_Id,product_uuid,file_image,title_image,qty_baht,
     (qty_baht*tbl_options.grams) as grams,
     option_name,tile_name, code_id,sum(quantity) as quantity , unite_name `;
@@ -565,7 +566,7 @@ router.get('/st-group', function (req, res) {
 router.get('/groupby', function (req, res) {
     const tables = `tbl_product  
 LEFT JOIN tbl_options ON tbl_product.option_id_fk=tbl_options.option_id
-GROUP BY option_id_fk,qty_baht ORDER BY option_id_fk,qty_baht ASC`;
+GROUP BY option_id_fk,qty_baht,option_name ORDER BY option_id_fk,qty_baht ASC`;
     const fields = `option_id_fk,qty_baht,option_name`;
     db.selectData(tables, fields, (err, results) => {
         if (err) {

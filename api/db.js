@@ -1,11 +1,17 @@
 
 const mysql = require('mysql2');
 const connection = mysql.createConnection({
-    host: '45.77.241.213',
-    user: 'root',
-    password: 'plc@2023*.com',
+    host: '149.28.157.81',
+    user: 'phaeng',
+    password: '7{PyhB4TWih{g(*4',
     database: 'gold_shop'
 });
+// const connection = mysql.createConnection({
+//     host: '45.77.241.213',
+//     user: 'root',
+//     password: 'plc@2023*.com',
+//     database: 'gold_shop'
+// });
 
 const autoId = (table, fields, callback) => {
     const maxId = new Date().getFullYear() + '0001';
@@ -41,7 +47,6 @@ const maxCode = (table, fields, callback) => {
 
 // SELECT CONCAT('z-', LPAD(MAX(CAST(SUBSTRING(zone_code, 3) AS UNSIGNED)) + 1, 3, '0')) AS zonecode
 // FROM tbl_zone_sale;
-
 const insertData = (table, fields, data, callback) => {
     const placeholders = new Array(data.length).fill('?').join(', ');
     const query = `INSERT INTO ${table} (${fields}) VALUES (${placeholders})`;

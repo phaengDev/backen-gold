@@ -124,7 +124,6 @@ router.get("/", function (req, res) {
 
 router.get("/title/:typeId", function (req, res) {
     const title_id_fk = req.params.typeId;
-
     const tables = `tbl_recommended
         LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid
         LEFT JOIN tbl_options ON tbl_recommended.optoin_id_fk=tbl_options.option_id`;
@@ -177,7 +176,18 @@ router.get("/limit/:qty", function (req, res) {
 
 router.get("/g-recom", function (req, res) {
     const tables = `tbl_recommended
-        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid  GROUP BY title_id_fk`;
+        LEFT JOIN tbl_product_tile ON tbl_recommended.title_id_fk=tbl_product_tile.tile_uuid  
+    GROUP BY 
+    recomended_id,
+	title_id_fk,
+	recomennde_name,
+	optoin_id_fk,
+	qty_baht,
+	recd_remark,
+	recd_image,
+	tile_name,
+	option_name,
+	grams`;
     const fieldTitle = `title_id_fk, tile_name`;
 
     const fieldsLis = `recomended_id,

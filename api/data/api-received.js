@@ -213,7 +213,8 @@ router.post("/createMt", function (req, res) {
     LEFT JOIN tbl_unite ON tbl_product_tile.unite_id_fk=tbl_unite.unite_uuid
     LEFT JOIN tbl_zone_sale ON tbl_received.zone_id_fk=tbl_zone_sale.zone_Id`;
         const fields = 'product_id_fk, zone_id_fk, count(received_qty) as received_qty, DATE(received_date) as received_date, tile_name, code_id, unite_name, tiles_id_fk, qty_baht, zone_name, option_name';
-        const where = `DATE(received_date) BETWEEN '${start_date}' AND '${end_date}' ${tilesId_fk} ${optionId_fk} ${zoneId_fk} GROUP BY product_id_fk,zone_id_fk,DATE(received_date)`;
+        const where = `DATE(received_date) BETWEEN '${start_date}' AND '${end_date}' ${tilesId_fk} ${optionId_fk} ${zoneId_fk} 
+        GROUP BY product_id_fk,zone_id_fk,tile_name, code_id, unite_name, tiles_id_fk, qty_baht, zone_name, option_name,DATE(received_date)`;
         const results = await new Promise((resolve, reject) => {
             db.selectWhere(tables, fields, where, (err, results) => {
                 if (err) {
@@ -252,7 +253,6 @@ router.post("/createMt", function (req, res) {
         excelData.forEach(row => {
             const stock_sale_Id = uuidv4();
             const received_id = uuidv4();
-
             let product_id_fk = row[1];
             let zone_id_fk = row[2];
             let quantity = row[3];

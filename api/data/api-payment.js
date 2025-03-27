@@ -113,11 +113,10 @@ router.post("/balance", function (req, res) {
     }
     const start_date = startDate.substring(0, 10);
     const end_date = endDate.substring(0, 10);
-
-    const fields = ` SUM(balance_total) AS balanceSale,
-    SUM(CASE WHEN status_gets = '1'  ${statusGets} THEN balance_total ELSE 0 END) AS balance_arrears,
-    SUM(CASE WHEN status_gets = '2'  ${statusGets} THEN balance_total ELSE 0 END) AS balance_get_paid`;
-    const where = `tbl_sale_gold.sale_status='1' AND  DATE(sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} `;
+    const fields = `SUM(balance_total) AS balanceSale,
+    SUM(CASE WHEN status_gets = '1' AND sale_status='1' ${statusGets} THEN balance_total ELSE 0 END) AS balance_arrears,
+    SUM(CASE WHEN status_gets = '2' AND sale_status='1' ${statusGets} THEN balance_total ELSE 0 END) AS balance_get_paid`;
+    const where = `tbl_sale_gold.sale_status='1' AND  DATE(sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${statusGets} ${staff_id_fk}`;
     db.fetchSingle('tbl_sale_gold', fields, where, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'An error occurred while fetching data.' });

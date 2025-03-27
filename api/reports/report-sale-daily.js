@@ -125,6 +125,7 @@ router.post('/getmoney', function (req, resp) {
 	}
 	const start_date = startDate.substring(0, 10);
 	const end_date = endDate.substring(0, 10);
+
 	const tables = `tbl_sale_gold
 	LEFT JOIN oac_currency ON tbl_sale_gold.currency_id_fk = oac_currency.currency_id
 	LEFT JOIN tbl_staff ON tbl_sale_gold.staff_id_fk = tbl_staff.staff_uuid
@@ -197,7 +198,7 @@ LEFT JOIN tbl_zone_sale ON tbl_sale_detail.zone_id_fk = tbl_zone_sale.zone_Id`;
 	tbl_options.option_name, 
 	tbl_zone_sale.zone_name,
 	tbl_unite.unite_name`;
-	const where = `tbl_sale_gold.sale_status='1' AND  DATE(tbl_sale_gold.sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${statusGets}  ORDER BY sale_id ASC`;
+	const where = `tbl_sale_gold.sale_status=1 AND  DATE(tbl_sale_gold.sale_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${statusGets}  ORDER BY sale_id ASC`;
 	db.selectWhere(tables, fields, where, (err, results) => {
 		if (err) {
 			return resp.status(500).json({ message: 'An error occurred while fetching data.' });
@@ -274,7 +275,7 @@ router.post("/r-cancle", function (req, res) {
 	tbl_customer.cus_lname, 
 	tbl_customer.cus_tel, 
 	A.userName,
-	B.userName as userCancle,
+	C.userName as userCancle,
 	status_off_sale,
 	date_off_sale`;
 	const where = `tbl_sale_gold.sale_status='2' AND  DATE(sale_can_date) BETWEEN '${start_date}' AND '${end_date}' ${staff_id_fk} ${status_off_sale} ORDER BY sale_id ASC`;
@@ -465,7 +466,14 @@ router.get("/saledays/:id", function (req, res) {
         unite_name,
 		code_id,
         tbl_sale_detail.product_id_fk`;
-	const whereSale = `status_cancle = '1' AND DATE(tbl_sale_detail.create_date) = '${dateNow}' AND branch_id_fk='${branceId}' GROUP BY tbl_sale_detail.product_id_fk`;
+	const whereSale = `status_cancle = '1' AND DATE(tbl_sale_detail.create_date) = '${dateNow}' AND branch_id_fk='${branceId}' 
+	GROUP BY tbl_sale_detail.product_id_fk,
+		tbl_product.qty_baht, 
+		quantity,
+        tile_name, 
+        option_name, 
+        unite_name,
+		code_id,`;
 	db.selectWhere(tableSale, fieldsSale, whereSale, (err, saleResults) => {
 		if (err) {
 			console.error('Error fetching sales data:', err);
@@ -586,7 +594,7 @@ router.post('/list-qty', async (req, res) => {
 	  LEFT JOIN tbl_options ON tbl_product.option_id_fk = tbl_options.option_id`;
 	const fieldList = `CONCAT(tile_code,'-',code_id) AS pos_code ,tbl_sale_detail.create_date ,tile_name,option_name,tbl_product.qty_baht, SUM(order_qty) AS orderqty,tbl_unite.unite_name,
 			SUM(total_balance) AS total_balance`;
-	const whereList = `tbl_sale_detail.status_cancle='1' AND DATE(tbl_sale_detail.create_date) BETWEEN '${start_date}' AND '${end_date}' ${optionId_fk} ${productId_fk} GROUP BY product_id_fk`;
+	const whereList = `tbl_sale_detail.status_cancle='1' AND DATE(tbl_sale_detail.create_date) BETWEEN '${start_date}' AND '${end_date}' ${optionId_fk} ${productId_fk} GROUP BY product_id_fk,tbl_sale_detail.create_date ,tile_name,option_name,tbl_product.qty_baht,tbl_unite.unite_name`;
 	db.selectWhere(tableList, fieldList, whereList, (err, saleList) => {
 		if (err) {
 			return res.status(500).json({ message: 'An error occurred while fetching data.' });
@@ -594,5 +602,45 @@ router.post('/list-qty', async (req, res) => {
 		res.status(200).json(saleList);
 	});
 });
+
+
+router.post('/list-mpy', async (req, res) => {
+	const {startDate, endDate} = req.body;
+	const tables=`tbl_sale_gold tsg
+			LEFT JOIN  tbl_staff ts ON tsg.staff_id_fk = ts.staff_uuid`;
+	const fields=`DATE(sale_date) AS saleDate,
+    SUM(tsg.balance_total) AS balance_total, 
+    SUM(tsg.balance_cash) AS balance_cash, 
+    SUM(tsg.balance_transfer) AS balance_transfer, 
+    SUM(tsg.balance_return) AS balance_return, 
+	(SELECT COUNT(*) 
+              FROM tbl_sale_gold 
+              WHERE sale_status = 1 
+              AND staff_id_fk = tsg.staff_id_fk 
+              AND DATE(sale_date) = DATE(tsg.sale_date)) AS qtyBill,
+    		COALESCE((SELECT SUM(balance_total) 
+              FROM tbl_sale_gold 
+              WHERE sale_status = 1 AND status_gets = 1 
+              AND staff_id_fk = tsg.staff_id_fk 
+              AND DATE(sale_date) = DATE(tsg.sale_date)), 0) AS balance_arrears,
+    			COALESCE((SELECT SUM(balance_total) 
+              FROM tbl_sale_gold 
+              WHERE sale_status = 1 AND status_gets = 2 
+              AND staff_id_fk = tsg.staff_id_fk 
+              AND DATE(sale_date) = DATE(tsg.sale_date)), 0) AS balance_paid,
+				ts.first_name, 
+				ts.last_name, 
+				ts.staff_tel`;
+	const wheres=`sale_status=1 AND DATE(sale_date) BETWEEN '${startDate}' AND '${endDate}' 
+	 GROUP BY tsg.staff_id_fk, DATE(tsg.sale_date), ts.first_name, ts.last_name,ts.staff_tel`;
+		db.selectWhere(tables, fields, wheres, (err, results) => {
+			if (err) {
+				console.error('Error fetching sales data:', err);
+				return res.status(500).json({ message: 'An error occurred while fetching data.' });
+			} 
+			res.status(200).json(results);
+		});
+});
+
 
 module.exports = router;

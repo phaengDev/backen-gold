@@ -11,7 +11,6 @@ const currentDatetime = moment();
 const dateTime = currentDatetime.format('YYYY-MM-DD HH:mm:ss');
 router.post("/create", function (req, res) {
     const staff_uuid = uuidv4();
-
     let nyPorfile = '';
     const storage = multer.diskStorage({
         destination: function (req, profile, cb) {
@@ -26,11 +25,14 @@ router.post("/create", function (req, res) {
     const upload = multer({ storage }).single('profile');
     upload(req, res, function (err) {
         const { first_name, last_name, birthday, gender, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date } = req.body;
+        const birthday2=moment(birthday).format('YYYY-MM-DD');
+        const registerDate=moment(register_date).format('YYYY-MM-DD');
+
         const table = 'tbl_staff';
         db.autoId(table, 'id', (err, id) => {
             const id_code = 'VK-' + id;
             const fields = 'id,staff_uuid, id_code,profile,gender,first_name,last_name,birthday,staff_tel,staff_email,province_id_fk,district_id_fk,village_name,staff_remark,branch_id_fk,register_date,status_inout,create_date';
-            const dataValue = [id, staff_uuid, id_code, nyPorfile, gender, first_name, last_name, birthday, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date, '1', dateTime];
+            const dataValue = [id, staff_uuid, id_code, nyPorfile, gender, first_name, last_name, birthday2, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, registerDate, '1', dateTime];
             db.insertData(table, fields, dataValue, (err, results) => {
                 if (err) {
                     console.error('Error inserting data:', err);
@@ -107,7 +109,8 @@ router.post("/edit", function (req, res) {
 
         const { staff_uuid, first_name, last_name, birthday, gender, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date } = req.body;
         const table = 'tbl_staff';
-
+        const birthday2=moment(birthday).format('YYYY-MM-DD');
+        const registerDate=moment(register_date).format('YYYY-MM-DD');
         const where = `staff_uuid='${staff_uuid}'`;
         db.selectWhere(table, '*', where, (err, results) => {
             if (results[0].profile && results[0].profile !== '' && nyPorfile !== '') {
@@ -123,9 +126,8 @@ router.post("/edit", function (req, res) {
                 profileName = nyPorfile;
             }
 
-
             const field = 'profile,gender,first_name,last_name,birthday,staff_tel,staff_email,province_id_fk,district_id_fk,village_name,staff_remark,branch_id_fk,register_date';
-            const newData = [profileName, gender, first_name, last_name, birthday, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, register_date, staff_uuid];
+            const newData = [profileName, gender, first_name, last_name, birthday2, staff_tel, staff_email, province_id_fk, district_id_fk, village_name, staff_remark, branch_id_fk, registerDate, staff_uuid];
             const condition = 'staff_uuid=?';
             db.updateData(table, field, newData, condition, (err, results) => {
                 if (err) {

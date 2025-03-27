@@ -21,9 +21,9 @@ router.get("/:id", function (req, res) {
     });
 });
 router.get("/pv/:id", function (req, res) {
-    const pvid= req.params.id;
-    const where=`province_id_fk=${pvid}`;
-    db.selectWhere('tbl_district','*', where,(err, results) => {
+    const pvid = req.params.id;
+    const wheres=`province_id_fk=${pvid}`;
+    db.selectWhere('tbl_district','*', wheres,(err, results) => {
         if (err) {
             return res.status(400).send(err);
         }

@@ -77,8 +77,8 @@ router.delete("/:id", function (req, res, next) {
  
     router.get("/", function (req, res) {
         const tables = `tbl_zone_sale`;
-        const field=`zone_Id,zone_code,zone_name,bg_color,zone_status,
-        (SELECT COUNT(*) FROM tbl_stock_sale WHERE zone_id_fk = tbl_zone_sale.zone_Id) AS qty_stock`
+        const field=`id,zone_Id,zone_code,zone_name,bg_color,zone_status,
+        (SELECT COUNT(*) FROM tbl_stock_sale WHERE zone_id_fk = tbl_zone_sale.zone_Id) AS qty_stock`;
         db.selectData(tables,field, (err, results) => {
             if (err) {
                 return res.status(400).send();

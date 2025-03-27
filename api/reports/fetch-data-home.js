@@ -42,7 +42,8 @@ router.get("/total", async function (req, res) {
         results[i].totalSale = reSale.total_balance;
         // =================== sum option 
         const fieldList = 'COALESCE(SUM(total_balance), 0) AS balance_pt,option_name';
-        const whereList = `status_cancle='1' AND DATE(tbl_sale_detail.create_date)='${dateNow}' AND type_id_fk='${results[i].type_Id}' GROUP BY option_id_fk`;
+        const whereList = `status_cancle='1' AND DATE(tbl_sale_detail.create_date)='${dateNow}' AND type_id_fk='${results[i].type_Id}'
+         GROUP BY option_id_fk,option_name`;
         const resList = await new Promise((resolve, reject) => {
             db.selectWhere(tabeList, fieldList, whereList, (err, resList) => {
                 if (err) {
@@ -57,15 +58,17 @@ router.get("/total", async function (req, res) {
     // } catch (error) {
     //     res.status(500).json({ message: 'Internal Server Error' });
     // }
-
 });
 router.get("/stock", async function (req, res) {
     try {
         const tableZ = `tbl_stock_sale
-            LEFT JOIN tbl_zone_sale ON tbl_stock_sale.zone_id_fk = tbl_zone_sale.zone_Id`;
-
-        const fieldsZ = 'zone_id_fk, zone_name';
-        const whereZ = `quantity <='5' GROUP BY zone_id_fk ORDER BY tbl_zone_sale.id`;
+	LEFT JOIN tbl_zone_sale ON tbl_stock_sale.zone_id_fk = tbl_zone_sale.zone_Id`;
+        const fieldsZ = `tbl_stock_sale.zone_id_fk, 
+        tbl_zone_sale.zone_name`;
+        const whereZ = `tbl_stock_sale.quantity <= 5
+    GROUP BY 
+    tbl_stock_sale.zone_id_fk, tbl_zone_sale.zone_name`;
+       
         const tablePs = `tbl_stock_sale
             LEFT JOIN tbl_product ON tbl_stock_sale.product_id_fk = tbl_product.product_uuid
             LEFT JOIN tbl_product_tile ON tbl_product.tiles_id_fk = tbl_product_tile.tile_uuid
